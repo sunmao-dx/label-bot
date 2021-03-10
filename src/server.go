@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/SmartsYoung/test/src/api"
 	"github.com/widuu/gojson"
@@ -30,11 +31,11 @@ func handlePostJson(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getToken() []byte {
-	return []byte("7f399efd043ee3d68e5edbf45326152b")
+	return []byte("adb08695039522366c4a645e1e6a3dd4")
 }
 
 func getTokenstr() string {
-	return "7f399efd043ee3d68e5edbf45326152b"
+	return "adb08695039522366c4a645e1e6a3dd4"
 }
 
 func note_process(request *http.Request) {
@@ -43,18 +44,24 @@ func note_process(request *http.Request) {
 	str := string(s)
 	name := gojson.Json(str).Get("comment").Get("user").Get("name").Tostring()
 	issue_num := gojson.Json(str).Get("issue").Get("number").Tostring()
-
+	var v interface{}
+	json.Unmarshal(s, &v)
+	labels := v.(map[string]interface{})["issue"].(map[string]interface{})["labels"].([]interface{})
+	label_str := make([]string, 0)
+	for _, o := range labels {
+		name := o.(map[string]interface{})["name"].(string)
+		label_str = append(label_str, name)
+	}
 	if name != "test-bot" {
 		c := api.NewClient(getToken)
-		res := c.AddIssueLabel("Meta-OSS", "FenixscanX", issue_num, "kernel")
+		res := c.AddIssueAssignee("Meta-OSS", "FenixscanX", issue_num, token, "clement_li")
 		if res != nil {
 			fmt.Println(res.Error())
 			return
 		}
-		c1 := api.NewClient(getToken)
-		res = c1.AddIssueAssignee("Meta-OSS", "FenixscanX", issue_num, token, "clement_li")
-		if res != nil {
-			fmt.Println(res.Error())
+		resc := c.AddIssueLabel("Meta-OSS", "FenixscanX", issue_num, label_str)
+		if resc != nil {
+			fmt.Println(resc.Error())
 			return
 		}
 	}

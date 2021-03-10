@@ -296,8 +296,8 @@ func (c *client) GetRepos(org string) ([]sdk.Project, error) {
 	return r, nil
 }
 
-func (c *client) AddIssueLabel(org, repo, number, label string) error {
-	opt := &sdk.PostV5ReposOwnerRepoIssuesNumberLabelsOpts{Body: optional.NewInterface([]string{label})}
+func (c *client) AddIssueLabel(org, repo, number string, label []string) error {
+	opt := &sdk.PostV5ReposOwnerRepoIssuesNumberLabelsOpts{Body: optional.NewInterface(label)}
 	_, _, err := c.ac.LabelsApi.PostV5ReposOwnerRepoIssuesNumberLabels(context.Background(), org, repo, number, opt)
 	return formatErr(err, "add issue label")
 }
