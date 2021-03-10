@@ -1,6 +1,5 @@
 package api
 
-
 import (
 	sdk "gitee.com/openeuler/go-gitee/gitee"
 )
@@ -12,7 +11,7 @@ type Client interface {
 	GetRef(org, repo, ref string) (string, error)
 	GetPRLabels(org, repo string, number int) ([]sdk.Label, error)
 	ListPRComments(org, repo string, number int) ([]sdk.PullRequestComments, error)
-	ListPrIssues(org, repo string, number int32) ([] sdk.Issue, error)
+	ListPrIssues(org, repo string, number int32) ([]sdk.Issue, error)
 	DeletePRComment(org, repo string, ID int) error
 	CreatePRComment(org, repo string, number int, comment string) error
 	UpdatePRComment(org, repo string, commentID int, comment string) error
@@ -24,6 +23,7 @@ type Client interface {
 	GetPRCommits(org, repo string, number int) ([]sdk.PullRequestCommits, error)
 
 	CreateGiteeIssueComment(org, repo string, number string, comment string) error
+	AddIssueAssignee(org, repo, number, token, assignee string) error
 
 	IsCollaborator(owner, repo, login string) (bool, error)
 	IsMember(org, login string) (bool, error)

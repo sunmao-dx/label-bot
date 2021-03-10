@@ -20,10 +20,6 @@ type client struct {
 	userData *sdk.User
 }
 
-func C2() int {
-	return 1
-}
-
 func NewClient(getToken func() []byte) Client {
 	token := string(getToken())
 
@@ -163,7 +159,7 @@ func (c *client) ListPRComments(org, repo string, number int) ([]sdk.PullRequest
 	return r, nil
 }
 
-func (c *client) ListPrIssues(org, repo string, number int32) ([] sdk.Issue, error) {
+func (c *client) ListPrIssues(org, repo string, number int32) ([]sdk.Issue, error) {
 	var issues []sdk.Issue
 	p := int32(1)
 	opt := sdk.GetV5ReposOwnerRepoPullsNumberIssuesOpts{}
@@ -220,7 +216,6 @@ func (c *client) RemovePRLabel(org, repo string, number int, label string) error
 
 func (c *client) AssignPR(org, repo string, number int, logins []string) error {
 	opt := sdk.PullRequestAssigneePostParam{Assignees: strings.Join(logins, ",")}
-
 	_, _, err := c.ac.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberAssignees(
 		context.Background(), org, repo, int32(number), opt)
 	return formatErr(err, "assign reviewer to pr")
@@ -314,6 +309,12 @@ func (c *client) RemoveIssueLabel(org, repo, number, label string) error {
 	return formatErr(err, "rm issue label")
 }
 
+func (c *client) AddIssueAssignee(org, repo, number, token, assignee string) error {
+	updateParam := sdk.IssueUpdateParam{AccessToken: token, Repo: repo, Assignee: assignee}
+	_, _, err := c.ac.IssuesApi.PatchV5ReposOwnerIssuesNumber(context.Background(), org, number, updateParam)
+	return formatErr(err, "issue update")
+}
+
 func formatErr(err error, doWhat string) error {
 	if err == nil {
 		return err
@@ -321,4 +322,3 @@ func formatErr(err error, doWhat string) error {
 
 	return fmt.Errorf("Failed to %s: %s", doWhat, err.Error())
 }
-
