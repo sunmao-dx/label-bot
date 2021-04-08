@@ -38,6 +38,7 @@ func getToken() []byte {
 
 // ServeHTTP validates an incoming webhook and puts it into the event channel.
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Event.")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
 	if !ok {
 		return
