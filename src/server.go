@@ -125,5 +125,5 @@ func getLabelsFromREMatches(matches [][]string) (labels []string) {
 
 func main() {
 	http.HandleFunc("/", HelloHandler)
-	http.ListenAndServe(":8008", nil)
+	http.ListenAndServe(":8009", nil)
 }
