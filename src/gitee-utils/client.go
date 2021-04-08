@@ -1,14 +1,14 @@
-package api
+package gitee_utils
 
 import (
 	"context"
 	"fmt"
-	"github.com/antihax/optional"
-	"golang.org/x/oauth2"
 	"strings"
 	"sync"
 
 	sdk "gitee.com/openeuler/go-gitee/gitee"
+	"github.com/antihax/optional"
+	"golang.org/x/oauth2"
 )
 
 var _ Client = (*client)(nil)
@@ -68,14 +68,49 @@ func (c *client) CreatePullRequest(org, repo, title, body, head, base string, ca
 	return pr, formatErr(err, "create pull request")
 }
 
-func (c *client) UpdatePullRequest(org, repo string, number int32, title, body, state, labels string) (sdk.PullRequest, error) {
-	opts := sdk.PullRequestUpdateParam{
-		Title:  title,
-		Body:   body,
-		State:  state,
-		Labels: labels,
+func (c *client) GetPullRequests(org, repo string, opts ListPullRequestOpt) ([]sdk.PullRequest, error) {
+
+	setStr := func(t *optional.String, v string) {
+		if v != "" {
+			*t = optional.NewString(v)
+		}
 	}
-	pr, _, err := c.ac.PullRequestsApi.PatchV5ReposOwnerRepoPullsNumber(context.Background(), org, repo, number, opts)
+
+	opt := sdk.GetV5ReposOwnerRepoPullsOpts{}
+	setStr(&opt.State, opts.State)
+	setStr(&opt.Head, opts.Head)
+	setStr(&opt.Base, opts.Base)
+	setStr(&opt.Sort, opts.Sort)
+	setStr(&opt.Direction, opts.Direction)
+	if opts.MilestoneNumber > 0 {
+		opt.MilestoneNumber = optional.NewInt32(int32(opts.MilestoneNumber))
+	}
+	if opts.Labels != nil && len(opts.Labels) > 0 {
+		opt.Labels = optional.NewString(strings.Join(opts.Labels, ","))
+	}
+
+	var r []sdk.PullRequest
+	p := int32(1)
+	for {
+		opt.Page = optional.NewInt32(p)
+		prs, _, err := c.ac.PullRequestsApi.GetV5ReposOwnerRepoPulls(context.Background(), org, repo, &opt)
+		if err != nil {
+			return nil, formatErr(err, "get pull requests")
+		}
+
+		if len(prs) == 0 {
+			break
+		}
+
+		r = append(r, prs...)
+		p++
+	}
+
+	return r, nil
+}
+
+func (c *client) UpdatePullRequest(org, repo string, number int32, param sdk.PullRequestUpdateParam) (sdk.PullRequest, error) {
+	pr, _, err := c.ac.PullRequestsApi.PatchV5ReposOwnerRepoPullsNumber(context.Background(), org, repo, number, param)
 	return pr, formatErr(err, "update pull request")
 }
 
@@ -216,6 +251,7 @@ func (c *client) RemovePRLabel(org, repo string, number int, label string) error
 
 func (c *client) AssignPR(org, repo string, number int, logins []string) error {
 	opt := sdk.PullRequestAssigneePostParam{Assignees: strings.Join(logins, ",")}
+
 	_, _, err := c.ac.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberAssignees(
 		context.Background(), org, repo, int32(number), opt)
 	return formatErr(err, "assign reviewer to pr")
@@ -233,11 +269,43 @@ func (c *client) GetPRCommits(org, repo string, number int) ([]sdk.PullRequestCo
 	return commits, formatErr(err, "get pr commits")
 }
 
+func (c *client) AssignGiteeIssue(org, repo string, number string, login string) error {
+	opt := sdk.IssueUpdateParam{
+		Repo:     repo,
+		Assignee: login,
+	}
+	_, v, err := c.ac.IssuesApi.PatchV5ReposOwnerIssuesNumber(
+		context.Background(), org, number, opt)
+
+	if err != nil {
+		if v.StatusCode == 403 {
+			return ErrorForbidden{err: formatErr(err, "assign assignee to issue").Error()}
+		}
+	}
+	return formatErr(err, "assign assignee to issue")
+}
+
+func (c *client) UnassignGiteeIssue(org, repo string, number string, login string) error {
+	return c.AssignGiteeIssue(org, repo, number, " ")
+}
+
 func (c *client) CreateGiteeIssueComment(org, repo string, number string, comment string) error {
 	opt := sdk.IssueCommentPostParam{Body: comment}
 	_, _, err := c.ac.IssuesApi.PostV5ReposOwnerRepoIssuesNumberComments(
 		context.Background(), org, repo, number, opt)
 	return formatErr(err, "create issue comment")
+}
+
+func (c *client) DeleteGiteeIssueComment(org, repo string, ID int) error {
+	_, err := c.ac.IssuesApi.DeleteV5ReposOwnerRepoIssuesCommentsId(
+		context.Background(), org, repo, int32(ID), nil)
+	return formatErr(err, "delete comment of issue")
+}
+
+func (c *client) UpdateGiteeIssueComment(org, repo string, commentID int, comment string) error {
+	_, _, err := c.ac.IssuesApi.PatchV5ReposOwnerRepoIssuesCommentsId(
+		context.Background(), org, repo, int32(commentID), comment, nil)
+	return formatErr(err, "update comment of issue")
 }
 
 func (c *client) IsCollaborator(owner, repo, login string) (bool, error) {
