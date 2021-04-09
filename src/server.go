@@ -92,7 +92,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	default:
 		break
 	}
-	fmt.Println(labelsToAdd)
 	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
 	if resc != nil {
 		fmt.Println(resc.Error())
@@ -118,7 +117,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		name := o.Name
 		label_str = append(label_str, name)
 	}
-	if name != "dx-bot" {
+	if name != "mindspore-dx-bot" {
 		c := gitee_utils.NewClient(getToken)
 		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
 		if len(labelMatches) == 0 {
