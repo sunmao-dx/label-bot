@@ -64,21 +64,21 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	c := gitee_utils.NewClient(getToken)
 	res := c.CreateGiteeIssueComment(org, repo, issue_num, "Please add labels, for example, "+
 			`if you found an issue in data component, you can type "//comp/data" in comment,`+
-			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more labels`)
+			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.\n`+
+		` 请为该issue打上标签，例如，当你遇到有关data组件的问题时，你可以在评论中输入 "//comp/data"， 这样issue会被打上"comp/data"标签，更多的标签可以查看`+
+		`https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`)
 	if res != nil {
 		fmt.Println(res.Error())
 		return
 	}
-	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
-	if len(labelMatches) == 0 {
-		return
-	}
 	var labelsToAdd []string
-	labelsToAdd = getLabelsFromREMatches(labelMatches)
-
+	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
+	if len(labelMatches) != 0 {
+		labelsToAdd = getLabelsFromREMatches(labelMatches)
+	}
 	switch issueType {
 	case "Bug-Report":
-		labelsToAdd = append(labelsToAdd, "kind/bug")
+		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
 		break
 	case "RFC":
 		labelsToAdd = append(labelsToAdd, "kind/feature")
@@ -92,7 +92,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	default:
 		break
 	}
-
+	fmt.Println(labelsToAdd)
 	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
 	if resc != nil {
 		fmt.Println(resc.Error())
