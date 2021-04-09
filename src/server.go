@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gitee.com/openeuler/go-gitee/gitee"
-	"github.com/SmartsYoung/test/src/api"
 	gitee_utils "github.com/SmartsYoung/test/src/gitee-utils"
 	"net/http"
 	"regexp"
@@ -61,12 +60,25 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	issue_num := i.Issue.Number
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
-	c := api.NewClient(getToken)
+	issueBody := i.Issue.Body
+	issueType := i.Issue.TypeName
+	c := gitee_utils.NewClient(getToken)
 	res := c.CreateGiteeIssueComment(org, repo, issue_num, "Please add labels, for example, "+
 			`if you found an issue in data component, you can type "//comp/data" in comment,`+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more labels`)
 	if res != nil {
 		fmt.Println(res.Error())
+		return
+	}
+	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
+	if len(labelMatches) == 0 {
+		return
+	}
+	var labelsToAdd []string
+	labelsToAdd = getLabelsFromREMatches(labelMatches)
+	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
+	if resc != nil {
+		fmt.Println(resc.Error())
 		return
 	}
 }
@@ -89,7 +101,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		name := o.Name
 		label_str = append(label_str, name)
 	}
-	if name != "test-bot" {
+	if name != "dx-bot" {
 		c := gitee_utils.NewClient(getToken)
 		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
 		if len(labelMatches) == 0 {
