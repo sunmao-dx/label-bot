@@ -31,10 +31,9 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	fmt.Fprint(w, "Event received. Have a nice day.")
 
 	switch eventType {
-	case "issues":
+	case "Issue Hook":
 		var ie gitee.IssueEvent
 		if err := json.Unmarshal(payload, &ie); err != nil {
 			return
@@ -43,7 +42,8 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		go handleIssueEvent(&ie)
-	case "issue_comment":
+	case "Note Hook":
+		fmt.Printf(eventType)
 		var ic gitee.NoteEvent
 		if err := json.Unmarshal(payload, &ic); err != nil {
 			return
@@ -119,7 +119,6 @@ func getLabelsFromREMatches(matches [][]string) (labels []string) {
 		labels = append(labels, label)
 		fmt.Println(label)
 	}
-	fmt.Printf("%#v", labels)
 	return
 }
 
