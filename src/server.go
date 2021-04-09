@@ -76,6 +76,24 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	var labelsToAdd []string
 	labelsToAdd = getLabelsFromREMatches(labelMatches)
+
+	switch issueType {
+	case "Bug-Report":
+		labelsToAdd = append(labelsToAdd, "kind/bug")
+		break
+	case "RFC":
+		labelsToAdd = append(labelsToAdd, "kind/feature")
+		break
+	case "Task":
+		labelsToAdd = append(labelsToAdd, "kind/task")
+		break
+	case "任务":
+		labelsToAdd = append(labelsToAdd, "kind/task")
+		break
+	default:
+		break
+	}
+
 	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
 	if resc != nil {
 		fmt.Println(resc.Error())
