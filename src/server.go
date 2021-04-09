@@ -42,7 +42,6 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		go handleIssueEvent(&ie)
 	case "Note Hook":
-		fmt.Printf(eventType)
 		var ic gitee.NoteEvent
 		if err := json.Unmarshal(payload, &ic); err != nil {
 			return
