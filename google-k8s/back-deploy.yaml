@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: back
-          image: robekeane/test-bot
+          image: robekeane/test-bot:0.1
           ports:
             - containerPort: 8008

@@ -63,7 +63,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	repo := i.Repository.Name
 	c := api.NewClient(getToken)
 	res := c.CreateGiteeIssueComment(org, repo, issue_num, "Please add labels, for example, "+
-			`if you are filing a runtime issue, you can type "//comp/runtime" in comment,`+
+			`if you found an issue in data component, you can type "//comp/data" in comment,`+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more labels`)
 	if res != nil {
 		fmt.Println(res.Error())
