@@ -12,7 +12,7 @@ import (
 
 var (
 	defaultLabels = []string{"kind", "priority", "area"}
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind)\s*(.*?)\s*$`)
 )
 
 func getToken() []byte {
@@ -81,7 +81,13 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
 		break
 	case "RFC":
-		labelsToAdd = append(labelsToAdd, "kind/feature")
+		labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+		break
+	case "Requirement":
+		labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+		break
+	case "Empty-Template":
+		labelsToAdd = append(labelsToAdd, "stat/wait-response")
 		break
 	case "Task":
 		labelsToAdd = append(labelsToAdd, "kind/task")
@@ -90,6 +96,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		labelsToAdd = append(labelsToAdd, "kind/task")
 		break
 	default:
+		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
 		break
 	}
 	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
