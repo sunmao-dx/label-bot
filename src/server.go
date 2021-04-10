@@ -5,15 +5,24 @@ import (
 	"fmt"
 	"gitee.com/openeuler/go-gitee/gitee"
 	gitee_utils "github.com/SmartsYoung/test/src/gitee-utils"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 )
 
+var jsonByte []byte
+
 var (
 	defaultLabels = []string{"kind", "priority", "area"}
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind|device|env|ci|0)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind|device|env|ci|0|1|2)\s*(.*?)\s*$`)
 )
+
+type Mentor struct {
+	Label string `json:"label"`
+	Name  string `json:"name"`
+}
 
 func getToken() []byte {
 	return []byte("adb08695039522366c4a645e1e6a3dd4")
@@ -113,16 +122,21 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	if *(i.Action) != "comment" {
 		return
 	}
+	assignee := ""
+	labelsToAdd_str := ""
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
 	name := i.Comment.User.Name
 	noteBody := i.Comment.Body
 	issue_num := i.Issue.Number
 	labels := i.Issue.Labels
-	label_str := make([]string, 0)
+	if i.Issue.Assignee != nil{
+		assignee = i.Issue.Assignee.Name
+	}
+	label_strs := make([]string, 0)
 	for _, o := range labels {
 		name := o.Name
-		label_str = append(label_str, name)
+		label_strs = append(label_strs, name)
 	}
 	if name != "mindspore-dx-bot" {
 		c := gitee_utils.NewClient(getToken)
@@ -134,6 +148,23 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 		resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
 		if resc != nil {
+			fmt.Println(resc.Error())
+			return
+		}
+		if assignee != "" {
+			return
+		}
+		assignee = getLabelAssignee(jsonByte, labelsToAdd)
+		if assignee == "" {
+			return
+		}
+		labelsToAdd_str = strings.Join(labelsToAdd,",")
+		if len(label_strs) != 0{
+			labelsToAdd = append(labelsToAdd, label_strs...)
+			labelsToAdd_str = strings.Join(labelsToAdd,",")
+		}
+		resd := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
+		if resd != nil {
 			fmt.Println(resc.Error())
 			return
 		}
@@ -156,7 +187,37 @@ func getLabelsFromREMatches(matches [][]string) (labels []string) {
 	return
 }
 
+func getLabelAssignee(mentorsJson []byte, labels []string) string {
+	var mentors []Mentor
+	if err := json.Unmarshal(mentorsJson, &mentors); err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	for i := range mentors {
+		for j := range labels{
+			if mentors[i].Label == labels[j]{
+				return mentors[i].Name
+			}
+		}
+	}
+	return ""
+}
+
+func loadJson() error {
+	jsonFile, err := os.Open("data/mentor.json")
+	if err != nil {
+		fmt.Println(err)
+		defer jsonFile.Close()
+		return err
+	}
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	jsonByte = byteValue
+	return nil
+}
+
 func main() {
+	loadJson()
 	http.HandleFunc("/", ServeHTTP)
 	http.ListenAndServe(":8008", nil)
 }

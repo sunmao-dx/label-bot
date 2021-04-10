@@ -269,10 +269,11 @@ func (c *client) GetPRCommits(org, repo string, number int) ([]sdk.PullRequestCo
 	return commits, formatErr(err, "get pr commits")
 }
 
-func (c *client) AssignGiteeIssue(org, repo string, number string, login string) error {
+func (c *client) AssignGiteeIssue(org, repo, labels string, number string, login string) error {
 	opt := sdk.IssueUpdateParam{
 		Repo:     repo,
 		Assignee: login,
+		Labels: labels,
 	}
 	_, v, err := c.ac.IssuesApi.PatchV5ReposOwnerIssuesNumber(
 		context.Background(), org, number, opt)
@@ -285,8 +286,8 @@ func (c *client) AssignGiteeIssue(org, repo string, number string, login string)
 	return formatErr(err, "assign assignee to issue")
 }
 
-func (c *client) UnassignGiteeIssue(org, repo string, number string, login string) error {
-	return c.AssignGiteeIssue(org, repo, number, " ")
+func (c *client) UnassignGiteeIssue(org, repo, labels string, number string, login string) error {
+	return c.AssignGiteeIssue(org, repo, labels, number, " ")
 }
 
 func (c *client) CreateGiteeIssueComment(org, repo string, number string, comment string) error {
