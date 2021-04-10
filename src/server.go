@@ -12,7 +12,7 @@ import (
 
 var (
 	defaultLabels = []string{"kind", "priority", "area"}
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind|device|env|ci|0)\s*(.*?)\s*$`)
 )
 
 func getToken() []byte {
@@ -56,13 +56,13 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	if *(i.Action) != "open" {
 		return
 	}
-	issue_num := i.Issue.Number
+	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
 	issueBody := i.Issue.Body
 	issueType := i.Issue.TypeName
 	c := gitee_utils.NewClient(getToken)
-	res := c.CreateGiteeIssueComment(org, repo, issue_num, "Please add labels, for example, "+
+	res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels, for example, "+
 			`if you found an issue in data component, you can type "//comp/data" in comment,`+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
 		` 请为该issue打上标签，例如，当你遇到有关data组件的问题时，你可以在评论中输入 "//comp/data"， 这样issue会被打上"comp/data"标签，更多的标签可以查看`+
@@ -99,7 +99,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
 		break
 	}
-	resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
+	resc := c.AddIssueLabel(org, repo, issueNum, labelsToAdd)
 	if resc != nil {
 		fmt.Println(resc.Error())
 		return
@@ -152,7 +152,6 @@ func getLabelsFromREMatches(matches [][]string) (labels []string) {
 	for _, match := range matches {
 		label := strings.TrimSpace(strings.Trim(match[0],"//"))
 		labels = append(labels, label)
-		fmt.Println(label)
 	}
 	return
 }
