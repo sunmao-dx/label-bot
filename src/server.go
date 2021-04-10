@@ -146,26 +146,24 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		}
 		var labelsToAdd []string
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
-		resc := c.AddIssueLabel(org, repo, issue_num, labelsToAdd)
-		if resc != nil {
-			fmt.Println(resc.Error())
-			return
-		}
 		if assignee != "" {
+			labelsToAdd = append(labelsToAdd, label_strs...)
+			labelsToAdd_str = strings.Join(labelsToAdd,",")
+			resd := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
+			if resd != nil {
+				fmt.Println(resd.Error())
+				return
+			}
 			return
 		}
 		assignee = getLabelAssignee(jsonByte, labelsToAdd)
-		if assignee == "" {
-			return
-		}
-		labelsToAdd_str = strings.Join(labelsToAdd,",")
 		if len(label_strs) != 0{
 			labelsToAdd = append(labelsToAdd, label_strs...)
 			labelsToAdd_str = strings.Join(labelsToAdd,",")
 		}
-		resd := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
-		if resd != nil {
-			fmt.Println(resc.Error())
+		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
+		if rese != nil {
+			fmt.Println(rese.Error())
 			return
 		}
 		return
