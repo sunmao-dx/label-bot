@@ -120,7 +120,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), for example, "+
 			`if you found an issue in data component, you can type "//comp/data" in comment,`+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
-			` 请为该issue打上组件(comp)或兴趣组(sig)标签，例如，当你遇到有关data组件的问题时，你可以在评论中输入 "//comp/data"，`+
+			` 为了让问题更快得到响应，请您为该issue打上组件(comp)或兴趣组(sig)标签，例如，当你遇到有关data组件的问题时，你可以在评论中输入 "//comp/data"，`+
 			` 这样issue会被打上"comp/data"标签，问题会分配给相应责任人更多的标签可以查看`+
 			`https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`)
 		if res != nil {
