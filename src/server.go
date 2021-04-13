@@ -127,7 +127,10 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			fmt.Println(res.Error())
 			return
 		}
+	} else {
+		return
 	}
+
 	var labelsToAdd []string
 	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
 	if len(labelMatches) != 0 {
