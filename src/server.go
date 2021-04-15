@@ -42,7 +42,7 @@ var jsonByte = []byte(`[` +
 `{"label":"sig/frontend","name":"kingxian"},` +
 `{"label":"sig/compiler","name":"zh_qh"},` +
 `{"label":"sig/executor","name":"kisnwang"},` +
-`{"label":"sig/modelzoo","name":"yingjy"},` +
+`{"label":"sig/modelzoo","name":"c_34"},` +
 `{"label":"sig/data","name":"liucunwei"},` +
 `{"label":"sig/graph-engine","name":"youui"},` +
 `{"label":"sig/visualization","name":"gaocongli_hw"},` +
