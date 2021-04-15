@@ -108,6 +108,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		return
 	}
 	assignee := ""
+	orgOrigin := "mindspore"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
@@ -115,6 +116,8 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	issueBody := i.Issue.Body
 	issueType := i.Issue.TypeName
 	labelsInit := i.Issue.Labels
+	issueMaker := i.Issue.User.Login
+
 	c := gitee_utils.NewClient(getToken)
 	if len(labelsInit) == 0{
 		res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), for example, "+
@@ -138,7 +141,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	switch issueType {
 	case "Bug-Report":
-		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
+		labelsToAdd = append(labelsToAdd, "kind/bug")
 		break
 	case "RFC":
 		labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
@@ -160,6 +163,9 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		break
 	}
 	assignee = getLabelAssignee(jsonByte, labelsToAdd)
+	if isUserInOrg(issueMaker, orgOrigin, c) {
+		assignee = issueMaker
+	}
 	labelsToAdd_str = strings.Join(labelsToAdd,",")
 	rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
 	if rese != nil {
@@ -234,12 +240,13 @@ func checkRepository(payload []byte, rep *gitee.ProjectHook) error {
 	return nil
 }
 
-func getLabelsFromREMatches(matches [][]string) (labels []string) {
+func getLabelsFromREMatches(matches [][]string) []string {
+	var labels []string
 	for _, match := range matches {
 		label := strings.TrimSpace(strings.Trim(match[0],"//"))
 		labels = append(labels, label)
 	}
-	return
+	return labels
 }
 
 func getLabelAssignee(mentorsJson []byte, labels []string) string {
@@ -256,6 +263,21 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 		}
 	}
 	return ""
+}
+
+func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
+	orgs, err := c.GetUserOrg(login)
+	fmt.Println(orgs)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	for _, org := range orgs {
+		if org.Login == orgOrigin {
+			return true
+		}
+	}
+	return false
 }
 
 func loadJson() error {

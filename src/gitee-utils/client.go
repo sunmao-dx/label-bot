@@ -384,6 +384,11 @@ func (c *client) AddIssueAssignee(org, repo, number, token, assignee string) err
 	return formatErr(err, "issue update")
 }
 
+func (c *client) GetUserOrg(login string) ([]sdk.Group ,error) {
+	group, _, err := c.ac.OrganizationsApi.GetV5UsersUsernameOrgs(context.Background(), login, nil)
+	return group, formatErr(err, "get org")
+}
+
 func formatErr(err error, doWhat string) error {
 	if err == nil {
 		return err
