@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	gitee_utils "gitee.com/lizi/test-bot/src/gitee-utils"
 	"gitee.com/openeuler/go-gitee/gitee"
-	gitee_utils "github.com/SmartsYoung/test/src/gitee-utils"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -57,7 +57,7 @@ var jsonByte = []byte(`[` +
 `]`)
 
 var (
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|bug|stat|kind|device|env|ci|0|1|2)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|stat|kind|device|env|ci|0|1|2)\s*(.*?)\s*$`)
 	labelRegexInit    = regexp.MustCompile(`(?m)^//(comp|sig)\s*(.*?)\s*$`)
 )
 
@@ -108,7 +108,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		return
 	}
 	assignee := ""
-	orgOrigin := "mindspore"
+	orgOrigin := "mind_spore"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
@@ -120,12 +120,18 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 
 	c := gitee_utils.NewClient(getToken)
 	if len(labelsInit) == 0{
-		res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), for example, "+
-			`if you found an issue in data component, you can type "//comp/data" in comment,`+
+		res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), "+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
-			` 为了让问题更快得到响应，请您为该issue打上组件(comp)或兴趣组(sig)标签，例如，当你遇到有关data组件的问题时，你可以在评论中输入 "//comp/data"，`+
-			` 这样issue会被打上"comp/data"标签，问题会分配给相应责任人更多的标签可以查看`+
-			`https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`)
+			` 为了让问题更快得到响应，请您为该issue打上组件(comp)或兴趣组(sig)标签，打上标签的问题可以直接推送给责任人进行处理。更多的标签可以查看`+
+			`https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
+			` 以组件问题为例，如果你发现问题是data组件造成的，你可以这样评论：`+ "\n" +
+			` //comp/data`+ "\n" +
+			` 当然你也可以向data SIG组求助，可以这样写：`+ "\n" +
+			` //comp/data`+ "\n" +
+			` //sig/data`+ "\n" +
+			` 如果是一个简单的问题，你可以留给刚进入社区的小伙伴来回答，这时候你可以这样写：`+ "\n" +
+			` //good-first-issue`+ "\n" +
+			` 恭喜你，你已经学会了使用命令来打标签，接下来就在下面的评论里打上标签吧！`)
 		if res != nil {
 			fmt.Println(res.Error())
 			return
@@ -163,7 +169,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		break
 	}
 	assignee = getLabelAssignee(jsonByte, labelsToAdd)
-	if isUserInOrg(issueMaker, orgOrigin, c) {
+	if isUserInEnt(issueMaker, orgOrigin, c) {
 		assignee = issueMaker
 	}
 	labelsToAdd_str = strings.Join(labelsToAdd,",")
@@ -267,7 +273,6 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 
 func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
 	orgs, err := c.GetUserOrg(login)
-	fmt.Println(orgs)
 	if err != nil {
 		fmt.Println(err)
 		return false
@@ -278,6 +283,16 @@ func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
 		}
 	}
 	return false
+}
+
+func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
+	_, err := c.GetUserEnt(entOrigin, login)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	} else {
+		return true
+	}
 }
 
 func loadJson() error {

@@ -75,7 +75,6 @@ func (c *client) GetPullRequests(org, repo string, opts ListPullRequestOpt) ([]s
 			*t = optional.NewString(v)
 		}
 	}
-
 	opt := sdk.GetV5ReposOwnerRepoPullsOpts{}
 	setStr(&opt.State, opts.State)
 	setStr(&opt.Head, opts.Head)
@@ -361,12 +360,11 @@ func (c *client) GetRepos(org string) ([]sdk.Project, error) {
 		r = append(r, ps...)
 		p++
 	}
-
 	return r, nil
 }
 
 func (c *client) AddIssueLabel(org, repo, number string, label []string) error {
-	opt := &sdk.PostV5ReposOwnerRepoIssuesNumberLabelsOpts{Body: optional.NewInterface(label)}
+	opt := sdk.PullRequestLabelPostParam{Body: label}
 	_, _, err := c.ac.LabelsApi.PostV5ReposOwnerRepoIssuesNumberLabels(context.Background(), org, repo, number, opt)
 	return formatErr(err, "add issue label")
 }
@@ -389,10 +387,14 @@ func (c *client) GetUserOrg(login string) ([]sdk.Group ,error) {
 	return group, formatErr(err, "get org")
 }
 
+func (c *client) GetUserEnt(ent, login string) (sdk.EnterpriseMember ,error) {
+	member, _, err := c.ac.EnterprisesApi.GetV5EnterprisesEnterpriseMembersUsername(context.Background(), ent, login,nil)
+	return member, formatErr(err, "get ent")
+}
+
 func formatErr(err error, doWhat string) error {
 	if err == nil {
 		return err
 	}
-
 	return fmt.Errorf("Failed to %s: %s", doWhat, err.Error())
 }

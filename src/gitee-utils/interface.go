@@ -40,6 +40,7 @@ type Client interface {
 	AddIssueLabel(org, repo, number string, label []string) error
 	AddIssueAssignee(org, repo, number, token, assignee string) error
 	GetUserOrg(login string) ([]sdk.Group ,error)
+	GetUserEnt(ent, login string) (sdk.EnterpriseMember ,error)
 }
 
 type ListPullRequestOpt struct {
