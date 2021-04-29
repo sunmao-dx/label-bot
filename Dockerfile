@@ -3,5 +3,4 @@ WORKDIR /app
 COPY ./go.mod .
 RUN go mod download
 COPY . .
-CMD ["cd", "src"]
-CMD ["go", "run", "server.go"]
+CMD ["go", "run", "src/server.go"]

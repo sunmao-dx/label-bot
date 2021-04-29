@@ -298,7 +298,7 @@ func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 }
 
 func loadJson() error {
-	jsonFile, err := os.Open("data/mentor.json")
+	jsonFile, err := os.Open("src/data/mentor.json")
 	if err != nil {
 		fmt.Println(err)
 		defer jsonFile.Close()
