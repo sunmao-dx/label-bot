@@ -12,50 +12,6 @@ import (
 	"strings"
 )
 
-//var jsonByte = []byte(`[` +
-//`{"label":"comp/data","name":"jonyguo"},` +
-//`{"label":"comp/parallel","name":"stsuteng"},` +
-//`{"label":"comp/optimizer","name":"zh_qh"},` +
-//`{"label":"comp/pynative","name":"chujinjin"},` +
-//`{"label":"comp/kernel","name":"anyrenwei"},` +
-//`{"label":"comp/runtime","name":"kisnwang"},` +
-//`{"label":"comp/device","name":"kisnwang"},` +
-//`{"label":"comp/pipeline","name":"zh_qh"},` +
-//`{"label":"comp/parser","name":"zh_qh"},` +
-//`{"label":"comp/cxx-api","name":"zhoufeng54"},` +
-//`{"label":"comp/debug","name":"lilongfei15"},` +
-//`{"label":"comp/ps","name":"cristoval"},` +
-//`{"label":"comp/pybind-api","name":"kingxian"},` +
-//`{"label":"comp/transform","name":"c_34"},` +
-//`{"label":"comp/vm","name":"kisnwang"},` +
-//`{"label":"comp/py-com","name":"stsuteng"},` +
-//`{"label":"comp/py-data","name":"jonyguo"},` +
-//`{"label":"comp/infer","name":"zhaizhiqiang"},` +
-//`{"label":"comp/mindrecord","name":"jonyguo"},` +
-//`{"label":"comp/api","name":"kingxian"},` +
-//`{"label":"comp/operator","name":"liangchenghui"},` +
-//`{"label":"comp/py-parallel","name":"stsuteng"},` +
-//`{"label":"comp/py-profiler","name":"wangyue01"},` +
-//`{"label":"comp/train","name":"kingxian"},` +
-//`{"label":"comp/build-install","name":"zhoufeng54"},` +
-//`{"label":"comp/modelzoo","name":"c_34"},` +
-//`{"label":"sig/frontend","name":"kingxian"},` +
-//`{"label":"sig/compiler","name":"zh_qh"},` +
-//`{"label":"sig/executor","name":"kisnwang"},` +
-//`{"label":"sig/modelzoo","name":"c_34"},` +
-//`{"label":"sig/data","name":"liucunwei"},` +
-//`{"label":"sig/graph-engine","name":"youui"},` +
-//`{"label":"sig/visualization","name":"gaocongli_hw"},` +
-//`{"label":"sig/security","name":"randywangze"},` +
-//`{"label":"sig/akg","name":"anyrenwei"},` +
-//`{"label":"sig/mslite","name":"zhaizhiqiang"},` +
-//`{"label":"sig/mdp","name":"jianfeichen"},` +
-//`{"label":"sig/parallel","name":"dr-orange"},` +
-//`{"label":"sig/adaptivetraining","name":"luomai-edin"},` +
-//`{"label":"sig/serving","name":"xu-yfei"},` +
-//`{"label":"sig/DX","name":"clement_li"}` +
-//`]`)
-
 var JsonByte []byte
 
 var (
@@ -76,7 +32,6 @@ func HelloHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World")
 }
 
-// ServeHTTP validates an incoming webhook and puts it into the event channel.
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Event.")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
