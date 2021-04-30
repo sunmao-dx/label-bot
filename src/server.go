@@ -15,7 +15,7 @@ import (
 var JsonByte []byte
 
 var (
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|stat|kind|device|env|ci|0|1|2)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
 	labelRegexInit    = regexp.MustCompile(`(?m)^//(comp|sig)\s*(.*?)\s*$`)
 )
 
