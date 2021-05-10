@@ -55,6 +55,12 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		go handleIssueCommentEvent(&ic)
+	case "Merge Request Hook":
+		var ic gitee.NoteEvent
+		if err := json.Unmarshal(payload, &ic); err != nil {
+			return
+		}
+		go handleIssueCommentEvent(&ic)
 	default:
 		return
 	}
