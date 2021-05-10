@@ -56,11 +56,11 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		go handleIssueCommentEvent(&ic)
 	case "Merge Request Hook":
-		var ic gitee.NoteEvent
-		if err := json.Unmarshal(payload, &ic); err != nil {
+		var ip gitee.PullRequestEvent
+		if err := json.Unmarshal(payload, &ip); err != nil {
 			return
 		}
-		go handleIssueCommentEvent(&ic)
+		go handlePullRequestEvent(&ip)
 	default:
 		return
 	}
@@ -141,7 +141,46 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		fmt.Println(rese.Error())
 		return
 	}
-	return
+}
+
+func handlePullRequestEvent(i *gitee.PullRequestEvent) {
+	if *(i.Action) != "open" {
+		return
+	}
+	prNum := i.PullRequest.Number
+	org := i.Repository.Namespace
+	repo := i.Repository.Name
+	prBody := i.PullRequest.Body
+	c := gitee_utils.NewClient(getToken)
+	res := c.CreatePRComment(org, repo, int(prNum), "Please add labels (comp or sig), "+
+			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
+			` 为了让代码尽快被审核，请您为Pull Request打上组件(comp)或兴趣组(sig)标签，打上标签的PR可以直接推送给责任人进行审核。更多的标签可以查看`+
+			` https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
+			` 以组件相关代码提交为例，如果你提交的是data组件代码，你可以这样评论：`+ "\n" +
+			` //comp/data`+ "\n" +
+			` 当然你也可以邀请data SIG组来审核代码，可以这样写：`+ "\n" +
+			` //comp/data`+ "\n" +
+			` //sig/data`+ "\n" +
+			` 另外你还可以给这个PR标记类型，例如是bugfix：`+ "\n" +
+			` //kind/bug`+ "\n" +
+			` 或者是特性需求：`+ "\n" +
+			` //kind/feature`+ "\n" +
+			` 恭喜你，你已经学会了使用命令来打标签，接下来就在下面的评论里打上标签吧！`)
+	if res != nil {
+		fmt.Println(res.Error())
+		return
+	}
+
+	var labelsToAdd []string
+	labelMatches := labelRegex.FindAllStringSubmatch(prBody, -1)
+	if len(labelMatches) == 0 {
+		labelsToAdd = getLabelsFromREMatches(labelMatches)
+		rese := c.AddPRLabel(org, repo, int(prNum), labelsToAdd)
+		if rese != nil {
+			fmt.Println(rese.Error())
+			return
+		}
+	}
 }
 
 func handleIssueCommentEvent(i *gitee.NoteEvent) {
@@ -198,7 +237,6 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			fmt.Println(rese.Error())
 			return
 		}
-		return
 	}
 }
 

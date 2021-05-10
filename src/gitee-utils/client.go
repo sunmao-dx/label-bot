@@ -232,11 +232,11 @@ func (c *client) UpdatePRComment(org, repo string, commentID int, comment string
 	return formatErr(err, "update comment of pr")
 }
 
-func (c *client) AddPRLabel(org, repo string, number int, label string) error {
-	opt := sdk.PullRequestLabelPostParam{Body: []string{label}}
+func (c *client) AddPRLabel(org, repo string, number int, labels []string) error {
+	opt := sdk.PullRequestLabelPostParam{Body: labels}
 	_, _, err := c.ac.PullRequestsApi.PostV5ReposOwnerRepoPullsNumberLabels(
 		context.Background(), org, repo, int32(number), opt)
-	return formatErr(err, "add label for pr")
+	return formatErr(err, "add labels for pr")
 }
 
 func (c *client) RemovePRLabel(org, repo string, number int, label string) error {
