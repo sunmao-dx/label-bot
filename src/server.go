@@ -54,7 +54,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(payload, &ic); err != nil {
 			return
 		}
-		go handleIssueCommentEvent(&ic)
+		go handleCommentEvent(&ic)
 	case "Merge Request Hook":
 		var ip gitee.PullRequestEvent
 		if err := json.Unmarshal(payload, &ip); err != nil {
@@ -173,7 +173,7 @@ func handlePullRequestEvent(i *gitee.PullRequestEvent) {
 
 	var labelsToAdd []string
 	labelMatches := labelRegex.FindAllStringSubmatch(prBody, -1)
-	if len(labelMatches) == 0 {
+	if len(labelMatches) != 0 {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 		rese := c.AddPRLabel(org, repo, int(prNum), labelsToAdd)
 		if rese != nil {
@@ -183,28 +183,36 @@ func handlePullRequestEvent(i *gitee.PullRequestEvent) {
 	}
 }
 
-func handleIssueCommentEvent(i *gitee.NoteEvent) {
-	if *(i.NoteableType) != "Issue"{
+func handleCommentEvent(i *gitee.NoteEvent) {
+	switch *(i.NoteableType) {
+	case "Issue":
+		go handleIssueCommentEvent(i)
+	case "PullRequest":
+		go handlePRCommentEvent(i)
+	default:
 		return
 	}
+}
+
+func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	if *(i.Action) != "comment" {
 		return
 	}
 	assignee := ""
-	labelsToAdd_str := ""
+	labelsToAddStr := ""
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
 	name := i.Comment.User.Name
 	noteBody := i.Comment.Body
-	issue_num := i.Issue.Number
+	issueNum := i.Issue.Number
 	labels := i.Issue.Labels
 	if i.Issue.Assignee != nil{
 		assignee = i.Issue.Assignee.Login
 	}
-	label_strs := make([]string, 0)
+	labelStrs := make([]string, 0)
 	for _, o := range labels {
-		name := o.Name
-		label_strs = append(label_strs, name)
+		nameStr := o.Name
+		labelStrs = append(labelStrs, nameStr)
 	}
 	if name != "mindspore-dx-bot" {
 		c := gitee_utils.NewClient(getToken)
@@ -215,12 +223,12 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		var labelsToAdd []string
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 		if assignee != "" {
-			if len(label_strs) != 0{
-				labelsToAdd = append(labelsToAdd, label_strs...)
+			if len(labelStrs) != 0{
+				labelsToAdd = append(labelsToAdd, labelStrs...)
 			}
-			labelsToAdd = append(labelsToAdd, label_strs...)
-			labelsToAdd_str = strings.Join(labelsToAdd,",")
-			resd := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
+			labelsToAdd = append(labelsToAdd, labelStrs...)
+			labelsToAddStr = strings.Join(labelsToAdd,",")
+			resd := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 			if resd != nil {
 				fmt.Println(resd.Error())
 				return
@@ -228,14 +236,38 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			return
 		}
 		assignee = getLabelAssignee(JsonByte, labelsToAdd)
-		if len(label_strs) != 0{
-			labelsToAdd = append(labelsToAdd, label_strs...)
+		if len(labelStrs) != 0{
+			labelsToAdd = append(labelsToAdd, labelStrs...)
 		}
-		labelsToAdd_str = strings.Join(labelsToAdd,",")
-		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issue_num, assignee)
+		labelsToAddStr = strings.Join(labelsToAdd,",")
+		rese := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 		if rese != nil {
 			fmt.Println(rese.Error())
 			return
+		}
+	}
+}
+
+func handlePRCommentEvent(i *gitee.NoteEvent) {
+	if *(i.Action) != "comment" {
+		return
+	}
+	prNum := i.PullRequest.Number
+	org := i.Repository.Namespace
+	repo := i.Repository.Name
+	name := i.Comment.User.Name
+	noteBody := i.Comment.Body
+	if name != "mindspore-dx-bot" {
+		c := gitee_utils.NewClient(getToken)
+		var labelsToAdd []string
+		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
+		if len(labelMatches) != 0 {
+			labelsToAdd = getLabelsFromREMatches(labelMatches)
+			rese := c.AddPRLabel(org, repo, int(prNum), labelsToAdd)
+			if rese != nil {
+				fmt.Println(rese.Error())
+				return
+			}
 		}
 	}
 }
