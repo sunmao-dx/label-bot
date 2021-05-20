@@ -79,6 +79,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	issueBody := i.Issue.Body
 	issueType := i.Issue.TypeName
 	labelsInit := i.Issue.Labels
+	assigneeInit := i.Issue.Assignee.Login
 	issueMaker := i.Issue.User.Login
 
 	c := gitee_utils.NewClient(getToken)
@@ -134,6 +135,9 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	assignee = getLabelAssignee(JsonByte, labelsToAdd)
 	if isUserInEnt(issueMaker, orgOrigin, c) {
 		assignee = issueMaker
+	}
+	if assigneeInit != "" {
+		assignee = assigneeInit
 	}
 	labelsToAdd_str = strings.Join(labelsToAdd,",")
 	rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
