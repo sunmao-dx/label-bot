@@ -78,16 +78,14 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	repo := i.Repository.Name
 	issueBody := i.Issue.Body
 	issueType := i.Issue.TypeName
-	labelsInit := i.Issue.Labels
-	assigneeInit := i.Issue.Assignee.Login
+    assigneeInit := i.Issue.Assignee
 	issueMaker := i.Issue.User.Login
 
 	c := gitee_utils.NewClient(getToken)
-	if len(labelsInit) == 0{
-		res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), "+
+	res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), "+
 			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
-			` 为了让问题更快得到响应，请您为该issue打上组件(comp)或兴趣组(sig)标签，打上标签的问题可以直接推送给责任人进行处理。更多的标签可以查看`+
-			`https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
+			` 为了让问题更快得到响应，请您为该issue打上**组件(comp)或兴趣组(sig)**标签，打上标签的问题可以直接推送给责任人进行处理。更多的标签可以查看`+
+			` https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
 			` 以组件问题为例，如果你发现问题是data组件造成的，你可以这样评论：`+ "\n" +
 			` //comp/data`+ "\n" +
 			` 当然你也可以向data SIG组求助，可以这样写：`+ "\n" +
@@ -96,14 +94,10 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			` 如果是一个简单的问题，你可以留给刚进入社区的小伙伴来回答，这时候你可以这样写：`+ "\n" +
 			` //good-first-issue`+ "\n" +
 			` 恭喜你，你已经学会了使用命令来打标签，接下来就在下面的评论里打上标签吧！`)
-		if res != nil {
+	if res != nil {
 			fmt.Println(res.Error())
 			return
-		}
-	} else {
-		return
 	}
-
 	var labelsToAdd []string
 	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
 	if len(labelMatches) != 0 {
@@ -136,8 +130,8 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	if isUserInEnt(issueMaker, orgOrigin, c) {
 		assignee = issueMaker
 	}
-	if assigneeInit != "" {
-		assignee = assigneeInit
+	if assigneeInit != nil {
+		assignee = assigneeInit.Login
 	}
 	labelsToAdd_str = strings.Join(labelsToAdd,",")
 	rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
@@ -165,7 +159,7 @@ func handlePullRequestEvent(i *gitee.PullRequestEvent) {
 			` 当然你也可以邀请data SIG组来审核代码，可以这样写：`+ "\n" +
 			` //comp/data`+ "\n" +
 			` //sig/data`+ "\n" +
-			` 另外你还可以给这个PR标记类型，例如是bugfix：`+ "\n" +
+			` 另外你还可以给这个PR标记类型，例如是bugfix：`+ "\n"  +
 			` //kind/bug`+ "\n" +
 			` 或者是特性需求：`+ "\n" +
 			` //kind/feature`+ "\n" +
