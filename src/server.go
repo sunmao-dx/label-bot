@@ -78,6 +78,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	repo := i.Repository.Name
 	issueBody := i.Issue.Body
 	issueType := i.Issue.TypeName
+	issueInit := i.Issue.Labels
     assigneeInit := i.Issue.Assignee
 	issueMaker := i.Issue.User.Login
 
@@ -98,6 +99,11 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			fmt.Println(res.Error())
 			return
 	}
+
+	if issueInit != nil {
+		return
+	}
+
 	var labelsToAdd []string
 	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
 	if len(labelMatches) != 0 {
