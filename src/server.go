@@ -15,11 +15,14 @@ import (
 var JsonByte []byte
 
 var (
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
-	labelRegexInit    = regexp.MustCompile(`(?m)^//(comp|sig)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
+	labelRegexTitle    = regexp.MustCompile(`^//(Lite|sig)\s*(.*?)\s*$`)
+	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/`+
+		`|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
 )
 
 type Mentor struct {
+	Dir string `json:"directory"`
 	Label string `json:"label"`
 	Name  string `json:"name"`
 }
@@ -77,6 +80,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
 	issueBody := i.Issue.Body
+	issueTitle := i.Issue.Title
 	issueType := i.Issue.TypeName
 	issueInit := i.Issue.Labels
     assigneeInit := i.Issue.Assignee
@@ -109,6 +113,32 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	if len(labelMatches) != 0 {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 	}
+
+	var labelFind string
+	var nameFind []string
+	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
+	if len(labelMatches) != 0 {
+		nameFind = getLabelsFromBodyMatches(labelBoMatches)
+	}
+	labelFind = getLabel(JsonByte, nameFind)
+
+	var labelFindTi string
+	var nameFindTi []string
+	labelTiMatches := labelRegexTitle.FindAllStringSubmatch(issueTitle, -1)
+	if len(labelMatches) != 0 {
+		nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
+	}
+	labelFindTi = getLabel(JsonByte, nameFindTi)
+
+	if labelFind != "" {
+		labelsToAdd = append(labelsToAdd, labelFind)
+	}
+
+	if labelFindTi != "" {
+		labelsToAdd = append(labelsToAdd, labelFindTi)
+	}
+
+
 	switch issueType {
 	case "Bug-Report":
 		labelsToAdd = append(labelsToAdd, "kind/bug")
@@ -292,6 +322,24 @@ func getLabelsFromREMatches(matches [][]string) []string {
 	return labels
 }
 
+func getLabelsFromBodyMatches(matches [][]string) []string {
+	var labels []string
+	for _, match := range matches {
+		label := strings.TrimSpace(strings.Trim(match[2],"/"))
+		labels = append(labels, label)
+	}
+	return labels
+}
+
+func getLabelsFromISMatches(matches [][]string) []string {
+	var labels []string
+	for _, match := range matches {
+		label := strings.TrimSpace(strings.Trim(match[2],"/"))
+		labels = append(labels, label)
+	}
+	return labels
+}
+
 func getLabelAssignee(mentorsJson []byte, labels []string) string {
 	var mentors []Mentor
 	if err := json.Unmarshal(mentorsJson, &mentors); err != nil {
@@ -302,6 +350,22 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 		for j := range labels{
 			if mentors[i].Label == labels[j]{
 				return mentors[i].Name
+			}
+		}
+	}
+	return ""
+}
+
+func getLabel(mentorsJson []byte, dirs []string) string {
+	var mentors []Mentor
+	if err := json.Unmarshal(mentorsJson, &mentors); err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	for i := range mentors {
+		for j := range dirs{
+			if mentors[i].Label == dirs[j]{
+				return mentors[i].Label
 			}
 		}
 	}
