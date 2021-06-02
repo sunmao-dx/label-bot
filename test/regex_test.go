@@ -9,14 +9,14 @@ import (
 
 var (
 	labelRegex    = regexp.MustCompile(`^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
-	labelRegexTitle    = regexp.MustCompile(`^(.*)(\[Lite\])\s*(.*?)\s*$`)
+	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite)\s*(.*?)\s*$`)
 	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/runtime/|/runtime/device/)\s*(.*?)\s*$`)
 )
 
 func TestRun(t *testing.T){
-	orgOrigin := "xxx/aaa/bbb/ops/xxx, xxx/minddata/xxxx"
+	orgOrigin := "[MS][Lite]dsadsa"
 	var labelsToAdd []string
-	labelMatches := labelRegexBody.FindAllStringSubmatch(orgOrigin, -1)
+	labelMatches := labelRegexTitle.FindAllStringSubmatch(orgOrigin, -1)
 	fmt.Println(labelMatches)
 	if len(labelMatches) != 0 {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)

@@ -16,9 +16,8 @@ var JsonByte []byte
 
 var (
 	labelRegex    = regexp.MustCompile(`^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
-	labelRegexTitle    = regexp.MustCompile(`^//(Lite|sig)\s*(.*?)\s*$`)
-	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/`+
-		`|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
+	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite|sig)\s*(.*?)\s*$`)
+	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
 )
 
 type Mentor struct {
@@ -104,40 +103,44 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			return
 	}
 
-	if issueInit != nil {
+	if len(issueInit) != 0 {
 		return
 	}
 
 	var labelsToAdd []string
+
 	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
 	if len(labelMatches) != 0 {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 	}
 
-	var labelFind string
+	issueBody = strings.Replace(issueBody, " ", "", -1)
+	issueBody = strings.Replace(issueBody, "\n", "", -1)
+	var labelFind []string
 	var nameFind []string
 	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
-	if len(labelMatches) != 0 {
+	fmt.Println(labelBoMatches)
+	if len(labelBoMatches) != 0 {
 		nameFind = getLabelsFromBodyMatches(labelBoMatches)
 	}
 	labelFind = getLabel(JsonByte, nameFind)
 
-	var labelFindTi string
+	var labelFindTi []string
 	var nameFindTi []string
 	labelTiMatches := labelRegexTitle.FindAllStringSubmatch(issueTitle, -1)
-	if len(labelMatches) != 0 {
+	fmt.Println(labelTiMatches)
+	if len(labelTiMatches) != 0 {
 		nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
 	}
 	labelFindTi = getLabel(JsonByte, nameFindTi)
 
-	if labelFind != "" {
-		labelsToAdd = append(labelsToAdd, labelFind)
+	if len(labelFind) != 0 {
+		labelsToAdd = append(labelsToAdd, labelFind...)
 	}
 
-	if labelFindTi != "" {
-		labelsToAdd = append(labelsToAdd, labelFindTi)
+	if len(labelFindTi) != 0 {
+		labelsToAdd = append(labelsToAdd, labelFindTi...)
 	}
-
 
 	switch issueType {
 	case "Bug-Report":
@@ -325,16 +328,7 @@ func getLabelsFromREMatches(matches [][]string) []string {
 func getLabelsFromBodyMatches(matches [][]string) []string {
 	var labels []string
 	for _, match := range matches {
-		label := strings.TrimSpace(strings.Trim(match[2],"/"))
-		labels = append(labels, label)
-	}
-	return labels
-}
-
-func getLabelsFromISMatches(matches [][]string) []string {
-	var labels []string
-	for _, match := range matches {
-		label := strings.TrimSpace(strings.Trim(match[2],"/"))
+		label := strings.ToLower(strings.TrimSpace(strings.Trim(match[2],"/")))
 		labels = append(labels, label)
 	}
 	return labels
@@ -356,20 +350,21 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 	return ""
 }
 
-func getLabel(mentorsJson []byte, dirs []string) string {
+func getLabel(mentorsJson []byte, dirs []string) []string {
 	var mentors []Mentor
+	var labels []string
 	if err := json.Unmarshal(mentorsJson, &mentors); err != nil {
 		fmt.Println(err)
-		return ""
+		return labels
 	}
 	for i := range mentors {
 		for j := range dirs{
-			if mentors[i].Label == dirs[j]{
-				return mentors[i].Label
+			if mentors[i].Dir == dirs[j]{
+				labels = append(labels, mentors[i].Label)
 			}
 		}
 	}
-	return ""
+	return labels
 }
 
 func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
