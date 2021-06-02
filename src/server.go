@@ -119,7 +119,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	var labelFind []string
 	var nameFind []string
 	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
-	fmt.Println(labelBoMatches)
 	if len(labelBoMatches) != 0 {
 		nameFind = getLabelsFromBodyMatches(labelBoMatches)
 	}
@@ -128,7 +127,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	var labelFindTi []string
 	var nameFindTi []string
 	labelTiMatches := labelRegexTitle.FindAllStringSubmatch(issueTitle, -1)
-	fmt.Println(labelTiMatches)
 	if len(labelTiMatches) != 0 {
 		nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
 	}
