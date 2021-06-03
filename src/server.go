@@ -16,7 +16,7 @@ var JsonByte []byte
 
 var (
 	labelRegex    = regexp.MustCompile(`^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|0|1|2)\s*(.*?)\s*$`)
-	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite|sig)\s*(.*?)\s*$`)
+	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
 	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
 )
 
@@ -28,10 +28,6 @@ type Mentor struct {
 
 func getToken() []byte {
 	return []byte("adb08695039522366c4a645e1e6a3dd4")
-}
-
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World")
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -116,13 +112,13 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 
 	issueBody = strings.Replace(issueBody, " ", "", -1)
 	issueBody = strings.Replace(issueBody, "\n", "", -1)
-	var labelFind []string
-	var nameFind []string
-	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
-	if len(labelBoMatches) != 0 {
-		nameFind = getLabelsFromBodyMatches(labelBoMatches)
-	}
-	labelFind = getLabel(JsonByte, nameFind)
+	//var labelFind []string
+	//var nameFind []string
+	//labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
+	//if len(labelBoMatches) != 0 {
+	//	nameFind = getLabelsFromBodyMatches(labelBoMatches)
+	//}
+	//labelFind = getLabel(JsonByte, nameFind)
 
 	var labelFindTi []string
 	var nameFindTi []string
@@ -132,9 +128,9 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	labelFindTi = getLabel(JsonByte, nameFindTi)
 
-	if len(labelFind) != 0 {
-		labelsToAdd = append(labelsToAdd, labelFind...)
-	}
+	//if len(labelFind) != 0 {
+	//	labelsToAdd = append(labelsToAdd, labelFind...)
+	//}
 
 	if len(labelFindTi) != 0 {
 		labelsToAdd = append(labelsToAdd, labelFindTi...)
@@ -365,19 +361,19 @@ func getLabel(mentorsJson []byte, dirs []string) []string {
 	return labels
 }
 
-func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
-	orgs, err := c.GetUserOrg(login)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-	for _, org := range orgs {
-		if org.Login == orgOrigin {
-			return true
-		}
-	}
-	return false
-}
+//func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
+//	orgs, err := c.GetUserOrg(login)
+//	if err != nil {
+//		fmt.Println(err)
+//		return false
+//	}
+//	for _, org := range orgs {
+//		if org.Login == orgOrigin {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 	_, err := c.GetUserEnt(entOrigin, login)
