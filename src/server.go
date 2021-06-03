@@ -69,6 +69,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		return
 	}
 	assignee := ""
+	strLabels := ""
 	orgOrigin := "mind_spore"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
@@ -112,13 +113,13 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 
 	issueBody = strings.Replace(issueBody, " ", "", -1)
 	issueBody = strings.Replace(issueBody, "\n", "", -1)
-	//var labelFind []string
-	//var nameFind []string
-	//labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
-	//if len(labelBoMatches) != 0 {
-	//	nameFind = getLabelsFromBodyMatches(labelBoMatches)
-	//}
-	//labelFind = getLabel(JsonByte, nameFind)
+	var labelFind []string
+	var nameFind []string
+	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
+	if len(labelBoMatches) != 0 {
+		nameFind = getLabelsFromBodyMatches(labelBoMatches)
+	}
+	labelFind = getLabel(JsonByte, nameFind)
 
 	var labelFindTi []string
 	var nameFindTi []string
@@ -127,10 +128,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
 	}
 	labelFindTi = getLabel(JsonByte, nameFindTi)
-
-	//if len(labelFind) != 0 {
-	//	labelsToAdd = append(labelsToAdd, labelFind...)
-	//}
 
 	if len(labelFindTi) != 0 {
 		labelsToAdd = append(labelsToAdd, labelFindTi...)
@@ -171,6 +168,20 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	if rese != nil {
 		fmt.Println(rese.Error())
 		return
+	}
+
+	if len(labelFind) != 0 {
+		for _, strLabel := range labelFind {
+			strLabels = strLabels + "//" + strLabel + "\n"
+		}
+		helloWord := "hello, @" + issueMaker + " , we suggest you add some labels like:" + "\n"
+		helloWordCn := "你好, @" + issueMaker + " , 建议您为这个issue打上标签:" + "\n"
+		labelWord := helloWord + helloWordCn + strLabels
+		resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
+		if resLabel != nil {
+			fmt.Println(resLabel.Error())
+			return
+		}
 	}
 }
 
@@ -360,20 +371,6 @@ func getLabel(mentorsJson []byte, dirs []string) []string {
 	}
 	return labels
 }
-
-//func isUserInOrg(login, orgOrigin string, c gitee_utils.Client) bool {
-//	orgs, err := c.GetUserOrg(login)
-//	if err != nil {
-//		fmt.Println(err)
-//		return false
-//	}
-//	for _, org := range orgs {
-//		if org.Login == orgOrigin {
-//			return true
-//		}
-//	}
-//	return false
-//}
 
 func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 	_, err := c.GetUserEnt(entOrigin, login)
