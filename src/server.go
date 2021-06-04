@@ -149,6 +149,9 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	case "Task":
 		labelsToAdd = append(labelsToAdd, "kind/task")
 		break
+	case "Task-Tracking":
+		labelsToAdd = append(labelsToAdd, "kind/task")
+		break
 	case "任务":
 		labelsToAdd = append(labelsToAdd, "kind/task")
 		break
