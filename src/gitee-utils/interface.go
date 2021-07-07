@@ -2,6 +2,7 @@ package gitee_utils
 
 import (
 	sdk "gitee.com/openeuler/go-gitee/gitee"
+	"net/http"
 )
 
 // Client interface for Gitee API
@@ -41,6 +42,9 @@ type Client interface {
 	AddIssueAssignee(org, repo, number, token, assignee string) error
 	GetUserOrg(login string) ([]sdk.Group ,error)
 	GetUserEnt(ent, login string) (sdk.EnterpriseMember ,error)
+
+	ListIssues(owner, repo, state, since, createAt string, page, perPage int) ([]sdk.Issue, *http.Response, error)
+	ListLabels(owner, repo string) ([]sdk.Label ,error)
 }
 
 type ListPullRequestOpt struct {

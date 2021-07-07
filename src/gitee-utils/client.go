@@ -3,6 +3,7 @@ package gitee_utils
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -390,6 +391,22 @@ func (c *client) GetUserOrg(login string) ([]sdk.Group ,error) {
 func (c *client) GetUserEnt(ent, login string) (sdk.EnterpriseMember ,error) {
 	member, _, err := c.ac.EnterprisesApi.GetV5EnterprisesEnterpriseMembersUsername(context.Background(), ent, login,nil)
 	return member, formatErr(err, "get ent")
+}
+
+func (c *client) ListIssues(owner, repo, state, since, createAt string, page, perPage int) ([]sdk.Issue, *http.Response ,error) {
+	oState := optional.NewString(state)
+	oPage := optional.NewInt32(int32(page))
+	oPerPage := optional.NewInt32(int32(perPage))
+	oSince := optional.NewString(since)
+	oCreateAt := optional.NewString(createAt)
+	issueParam := sdk.GetV5ReposOwnerRepoIssuesOpts{State: oState, Page: oPage, PerPage: oPerPage, Since: oSince, CreatedAt: oCreateAt}
+	issues, res, err := c.ac.IssuesApi.GetV5ReposOwnerRepoIssues(context.Background(), owner, repo, &issueParam)
+	return issues, res,formatErr(err, "list issues")
+}
+
+func (c *client) ListLabels(owner, repo string) ([]sdk.Label ,error) {
+	labels, _, err := c.ac.LabelsApi.GetV5ReposOwnerRepoLabels(context.Background(), owner, repo, nil)
+	return labels, formatErr(err, "list labels")
 }
 
 func formatErr(err error, doWhat string) error {
