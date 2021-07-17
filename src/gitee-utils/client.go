@@ -270,11 +270,37 @@ func (c *client) GetPRCommits(org, repo string, number int) ([]sdk.PullRequestCo
 }
 
 func (c *client) AssignGiteeIssue(org, repo, labels string, number string, login string) error {
+    var labelStr []string
+	labelsToAddStr := ""
+
+	ll, _, errll := c.ac.LabelsApi.GetV5ReposOwnerRepoLabels(context.Background(), org, repo, nil)
+
+	if errll != nil {
+		return formatErr(errll, "fail to get labels")
+	}
+
+	labelsArr := strings.Split(labels, ",")
+
+	for _, label := range labelsArr {
+		for _, l := range ll {
+			if label == l.Name {
+				labelStr = append(labelStr, label)
+			}
+		}
+	}
+
+	if len(labelStr) == 0 {
+		return formatErr(nil, "assign assignee to issue")
+	}
+
+	labelsToAddStr = strings.Join(labelStr,",")
+
 	opt := sdk.IssueUpdateParam{
 		Repo:     repo,
 		Assignee: login,
-		Labels: labels,
+		Labels: labelsToAddStr,
 	}
+
 	_, v, err := c.ac.IssuesApi.PatchV5ReposOwnerIssuesNumber(
 		context.Background(), org, number, opt)
 
