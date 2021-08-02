@@ -85,11 +85,14 @@ func handleIssueEvent(i *gitee.IssueEvent) {
     assigneeInit := i.Issue.Assignee
 	issueMaker := i.Issue.User.Login
 
-	c := gitee_utils.NewClient(getToken)
 	ignore := false
 	decision := false
 	issueTemp := string(issueComment[:])
 	decisionTemp := string(decisionComment[:])
+	assigneeStr := ""
+
+	c := gitee_utils.NewClient(getToken)
+
 
 	if len(issueInit) == 0 {
 		res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
@@ -158,6 +161,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		}
 		if assigneeInit != nil {
 			assignee = assigneeInit.Login
+			assigneeStr = " @" + assignee + " "
 		}
 		labelsToAdd_str = strings.Join(labelsToAdd,",")
 		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
@@ -170,8 +174,8 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			for _, strLabel := range labelFind {
 				strLabels = strLabels + "//" + strLabel + "\n"
 			}
-			helloWord := "hello, @" + issueMaker + " , we suggest you add some labels like:" + "\n"
-			helloWordCn := "你好, @" + issueMaker + " , 建议您为这个issue打上标签:" + "\n"
+			helloWord := "hello, @" + issueMaker + assigneeStr + " , we suggest you add some labels like:" + "\n"
+			helloWordCn := "你好, @" + issueMaker + assigneeStr + " , 建议您为这个issue打上标签:" + "\n"
 			labelWord := helloWord + helloWordCn + strLabels
 			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
 			if resLabel != nil {
@@ -180,6 +184,10 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		}
 	} else {
+		if assigneeInit != nil {
+			assignee = assigneeInit.Login
+			assigneeStr = " @" + assignee + " "
+		}
 		for _, label:= range issueInit {
 			if strings.Contains(label.Name,"comp/") ||
 				strings.Contains(label.Name,"sig/") ||
@@ -200,7 +208,8 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		}
 		if decision == true {
-			res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+			Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
 			if res != nil {
 				fmt.Println(res.Error())
 				return
@@ -261,9 +270,13 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	noteBody := i.Comment.Body
 	issueNum := i.Issue.Number
 	labels := i.Issue.Labels
+	issueMaker := i.Issue.User.Login
+	assigneeStr := ""
 	decisionTemp := string(decisionComment[:])
 	if i.Issue.Assignee != nil{
 		assignee = i.Issue.Assignee.Login
+		assigneeStr = " @" + assignee + " "
+		fmt.Println(assignee)
 	}
 	labelStrs := make([]string, 0)
 	for _, o := range labels {
@@ -291,7 +304,8 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			}
 			for _, label:= range labelsToAdd {
 				if label == "kind/decision" {
-					res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+					Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
+					res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
 					if res != nil {
 						fmt.Println(res.Error())
 						return
@@ -313,7 +327,8 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		}
 		for _, label:= range labelsToAdd {
 			if label == "kind/decision" {
-				res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+				Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
+				res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
 				if res != nil {
 					fmt.Println(res.Error())
 					return
