@@ -1,5 +1,5 @@
 Please use this template to give more details,
-请使用一下问题模板反馈更多需要决策的信息：
+请使用以下问题模板反馈更多需要决策的信息：
 
 **Solution Analysis(方案分析)：**
 **Decision Point(决策点)：**
