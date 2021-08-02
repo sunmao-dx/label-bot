@@ -65,6 +65,38 @@ func Remind() {
 	}
 }
 
+func DoPR(){
+	owner := "OpenEuler"
+	repo := "iSulad"
+	state := "closed"
+	perPage := 100
+	cz := time.FixedZone("CST", 8*3600)
+	csvFile, err := os.Create("../src/data/IssueResAlert.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer csvFile.Close()
+	csvFile.WriteString("\xEF\xBB\xBF")
+	w := csv.NewWriter(csvFile)
+	c := gitee_utils.NewClient(getToken)
+
+	opt := gitee_utils.ListPullRequestOpt{
+		State:    "all",
+	}
+
+	prs, res := c.GetPullRequests(owner, repo, opt)
+	if res != nil {
+		fmt.Println(res.Error())
+		return
+	} else {
+		for _, pr := range prs {
+			pr.Body
+		}
+	}
+
+
+}
+
 func DoTime() {
 	owner := "mindspore"
 	repo := "mindspore"

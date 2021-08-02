@@ -13,9 +13,12 @@ import (
 )
 
 var JsonByte []byte
+var prComment []byte
+var issueComment []byte
+var decisionComment []byte
 
 var (
-	labelRegex    = regexp.MustCompile(`^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|users|0|1|2)\s*(.*?)\s*$`)
+	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|users|0|1|2)\s*(.*?)\s*$`)
 	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
 	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
 )
@@ -83,108 +86,127 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	issueMaker := i.Issue.User.Login
 
 	c := gitee_utils.NewClient(getToken)
-	res := c.CreateGiteeIssueComment(org, repo, issueNum, "Please add labels (comp or sig), "+
-			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
-			` 为了让问题更快得到响应，请您为该issue打上**组件(comp)或兴趣组(sig)**标签，打上标签的问题可以直接推送给责任人进行处理。更多的标签可以查看`+
-			` https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
-			` 以组件问题为例，如果你发现问题是data组件造成的，你可以这样评论：`+ "\n" +
-			` //comp/data`+ "\n" +
-			` 当然你也可以向data SIG组求助，可以这样写：`+ "\n" +
-			` //comp/data`+ "\n" +
-			` //sig/data`+ "\n" +
-			` 如果是一个简单的问题，你可以留给刚进入社区的小伙伴来回答，这时候你可以这样写：`+ "\n" +
-			` //good-first-issue`+ "\n" +
-			` 恭喜你，你已经学会了使用命令来打标签，接下来就在下面的评论里打上标签吧！`)
-	if res != nil {
+	ignore := false
+	decision := false
+	issueTemp := string(issueComment[:])
+	decisionTemp := string(decisionComment[:])
+
+	if len(issueInit) == 0 {
+		res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
+		if res != nil {
 			fmt.Println(res.Error())
 			return
-	}
-
-	if len(issueInit) != 0 {
-		return
-	}
-
-	var labelsToAdd []string
-
-	labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
-	if len(labelMatches) != 0 {
-		labelsToAdd = getLabelsFromREMatches(labelMatches)
-	}
-
-	issueBody = strings.Replace(issueBody, " ", "", -1)
-	issueBody = strings.Replace(issueBody, "\n", "", -1)
-	var labelFind []string
-	var nameFind []string
-	labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
-	if len(labelBoMatches) != 0 {
-		nameFind = getLabelsFromBodyMatches(labelBoMatches)
-	}
-	labelFind = getLabel(JsonByte, nameFind)
-
-	var labelFindTi []string
-	var nameFindTi []string
-	labelTiMatches := labelRegexTitle.FindAllStringSubmatch(issueTitle, -1)
-	if len(labelTiMatches) != 0 {
-		nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
-	}
-	labelFindTi = getLabel(JsonByte, nameFindTi)
-
-	if len(labelFindTi) != 0 {
-		labelsToAdd = append(labelsToAdd, labelFindTi...)
-	}
-
-	switch issueType {
-	case "Bug-Report":
-		labelsToAdd = append(labelsToAdd, "kind/bug")
-		break
-	case "RFC":
-		labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
-		break
-	case "Requirement":
-		labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
-		break
-	case "Empty-Template":
-		labelsToAdd = append(labelsToAdd, "stat/wait-response")
-		break
-	case "Task":
-		labelsToAdd = append(labelsToAdd, "kind/task")
-		break
-	case "Task-Tracking":
-		labelsToAdd = append(labelsToAdd, "kind/task")
-		break
-	case "任务":
-		labelsToAdd = append(labelsToAdd, "kind/task")
-		break
-	default:
-		labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
-		break
-	}
-	assignee = getLabelAssignee(JsonByte, labelsToAdd)
-	if isUserInEnt(issueMaker, orgOrigin, c) {
-		assignee = issueMaker
-	}
-	if assigneeInit != nil {
-		assignee = assigneeInit.Login
-	}
-	labelsToAdd_str = strings.Join(labelsToAdd,",")
-	rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
-	if rese != nil {
-		fmt.Println(rese.Error())
-		return
-	}
-
-	if len(labelFind) != 0 {
-		for _, strLabel := range labelFind {
-			strLabels = strLabels + "//" + strLabel + "\n"
 		}
-		helloWord := "hello, @" + issueMaker + " , we suggest you add some labels like:" + "\n"
-		helloWordCn := "你好, @" + issueMaker + " , 建议您为这个issue打上标签:" + "\n"
-		labelWord := helloWord + helloWordCn + strLabels
-		resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
-		if resLabel != nil {
-			fmt.Println(resLabel.Error())
+		var labelsToAdd []string
+
+		labelMatches := labelRegex.FindAllStringSubmatch(issueBody, -1)
+		if len(labelMatches) != 0 {
+			labelsToAdd = getLabelsFromREMatches(labelMatches)
+		}
+
+		issueBody = strings.Replace(issueBody, " ", "", -1)
+		issueBody = strings.Replace(issueBody, "\n", "", -1)
+		var labelFind []string
+		var nameFind []string
+		labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
+		if len(labelBoMatches) != 0 {
+			nameFind = getLabelsFromBodyMatches(labelBoMatches)
+		}
+		labelFind = getLabel(JsonByte, nameFind)
+
+		var labelFindTi []string
+		var nameFindTi []string
+		labelTiMatches := labelRegexTitle.FindAllStringSubmatch(issueTitle, -1)
+		if len(labelTiMatches) != 0 {
+			nameFindTi = getLabelsFromBodyMatches(labelTiMatches)
+		}
+		labelFindTi = getLabel(JsonByte, nameFindTi)
+
+		if len(labelFindTi) != 0 {
+			labelsToAdd = append(labelsToAdd, labelFindTi...)
+		}
+
+		switch issueType {
+		case "Bug-Report":
+			labelsToAdd = append(labelsToAdd, "kind/bug")
+			break
+		case "RFC":
+			labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+			break
+		case "Requirement":
+			labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+			break
+		case "Empty-Template":
+			labelsToAdd = append(labelsToAdd, "stat/wait-response")
+			break
+		case "Task":
+			labelsToAdd = append(labelsToAdd, "kind/task")
+			break
+		case "Task-Tracking":
+			labelsToAdd = append(labelsToAdd, "kind/task")
+			break
+		case "任务":
+			labelsToAdd = append(labelsToAdd, "kind/task")
+			break
+		default:
+			labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
+			break
+		}
+		assignee = getLabelAssignee(JsonByte, labelsToAdd)
+		if isUserInEnt(issueMaker, orgOrigin, c) {
+			assignee = issueMaker
+		}
+		if assigneeInit != nil {
+			assignee = assigneeInit.Login
+		}
+		labelsToAdd_str = strings.Join(labelsToAdd,",")
+		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
+		if rese != nil {
+			fmt.Println(rese.Error())
 			return
 		}
+
+		if len(labelFind) != 0 {
+			for _, strLabel := range labelFind {
+				strLabels = strLabels + "//" + strLabel + "\n"
+			}
+			helloWord := "hello, @" + issueMaker + " , we suggest you add some labels like:" + "\n"
+			helloWordCn := "你好, @" + issueMaker + " , 建议您为这个issue打上标签:" + "\n"
+			labelWord := helloWord + helloWordCn + strLabels
+			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
+			if resLabel != nil {
+				fmt.Println(resLabel.Error())
+				return
+			}
+		}
+	} else {
+		for _, label:= range issueInit {
+			if strings.Contains(label.Name,"comp/") ||
+				strings.Contains(label.Name,"sig/") ||
+				strings.Contains(label.Name,"wg/") {
+				ignore = true
+				break
+			}
+			if label.Name == "kind/decision" {
+				decision = true
+				break
+			}
+		}
+		if ignore == false {
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
+			if res != nil {
+				fmt.Println(res.Error())
+				return
+			}
+		}
+		if decision == true {
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+			if res != nil {
+				fmt.Println(res.Error())
+				return
+			}
+		}
+
 	}
 }
 
@@ -196,21 +218,9 @@ func handlePullRequestEvent(i *gitee.PullRequestEvent) {
 	org := i.Repository.Namespace
 	repo := i.Repository.Name
 	prBody := i.PullRequest.Body
+	prTemp := string(prComment[:])
 	c := gitee_utils.NewClient(getToken)
-	res := c.CreatePRComment(org, repo, int(prNum), "Please add labels (comp or sig), "+
-			` also you can visit "https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md" to find more.`+ "\n" +
-			` 为了让代码尽快被审核，请您为Pull Request打上组件(comp)或兴趣组(sig)标签，打上标签的PR可以直接推送给责任人进行审核。更多的标签可以查看`+
-			` https://gitee.com/mindspore/community/blob/master/sigs/dx/docs/labels.md"`+ "\n" +
-			` 以组件相关代码提交为例，如果你提交的是data组件代码，你可以这样评论：`+ "\n" +
-			` //comp/data`+ "\n" +
-			` 当然你也可以邀请data SIG组来审核代码，可以这样写：`+ "\n" +
-			` //comp/data`+ "\n" +
-			` //sig/data`+ "\n" +
-			` 另外你还可以给这个PR标记类型，例如是bugfix：`+ "\n"  +
-			` //kind/bug`+ "\n" +
-			` 或者是特性需求：`+ "\n" +
-			` //kind/feature`+ "\n" +
-			` 恭喜你，你已经学会了使用命令来打标签，接下来就在下面的评论里打上标签吧！`)
+	res := c.CreatePRComment(org, repo, int(prNum), prTemp)
 	if res != nil {
 		fmt.Println(res.Error())
 		return
@@ -251,6 +261,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	noteBody := i.Comment.Body
 	issueNum := i.Issue.Number
 	labels := i.Issue.Labels
+	decisionTemp := string(decisionComment[:])
 	if i.Issue.Assignee != nil{
 		assignee = i.Issue.Assignee.Login
 	}
@@ -278,8 +289,18 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 				fmt.Println(resd.Error())
 				return
 			}
+			for _, label:= range labelsToAdd {
+				if label == "kind/decision" {
+					res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+					if res != nil {
+						fmt.Println(res.Error())
+						return
+					}
+				}
+			}
 			return
 		}
+		fmt.Println(labelsToAdd)
 		assignee = getLabelAssignee(JsonByte, labelsToAdd)
 		if len(labelStrs) != 0{
 			labelsToAdd = append(labelsToAdd, labelStrs...)
@@ -289,6 +310,15 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		if rese != nil {
 			fmt.Println(rese.Error())
 			return
+		}
+		for _, label:= range labelsToAdd {
+			if label == "kind/decision" {
+				res := c.CreateGiteeIssueComment(org, repo, issueNum, decisionTemp)
+				if res != nil {
+					fmt.Println(res.Error())
+					return
+				}
+			}
 		}
 	}
 }
@@ -317,10 +347,6 @@ func handlePRCommentEvent(i *gitee.NoteEvent) {
 	}
 }
 
-func handleLongIssue() {
-
-}
-
 func checkRepository(payload []byte, rep *gitee.ProjectHook) error {
 	if rep == nil {
 		return fmt.Errorf("event repository is empty,payload: %s", string(payload))
@@ -331,7 +357,7 @@ func checkRepository(payload []byte, rep *gitee.ProjectHook) error {
 func getLabelsFromREMatches(matches [][]string) []string {
 	var labels []string
 	for _, match := range matches {
-		label := strings.TrimSpace(strings.Trim(match[0],"//"))
+		label := strings.TrimSpace(strings.TrimLeft(match[0],"//"))
 		labels = append(labels, label)
 	}
 	return labels
@@ -389,8 +415,8 @@ func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 	}
 }
 
-func loadJson() error {
-	jsonFile, err := os.Open("src/data/mentor.json")
+func loadFile(path, fileType string) error {
+	jsonFile, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
 		defer jsonFile.Close()
@@ -398,12 +424,26 @@ func loadJson() error {
 	}
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	JsonByte = byteValue
+	switch {
+	case fileType == "json" :
+		JsonByte = byteValue
+	case fileType == "issue" :
+		issueComment = byteValue
+	case fileType == "pr":
+		prComment = byteValue
+	case fileType == "decision" :
+		decisionComment = byteValue
+	default:
+		fmt.Printf("no filetype\n" )
+	}
 	return nil
 }
 
 func main() {
-	loadJson()
+	loadFile("src/data/mentor.json", "json")
+	loadFile("src/data/issueComTemplate.md", "issue")
+	loadFile("src/data/decisionTemplate.md", "decision")
+	loadFile("src/data/prComTemplate.md", "pr")
 	http.HandleFunc("/", ServeHTTP)
 	http.ListenAndServe(":8008", nil)
 }
