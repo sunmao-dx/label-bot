@@ -6,6 +6,8 @@ import (
 	gitee_utils "gitee.com/lizi/test-bot/src/gitee-utils"
 	"github.com/robfig/cron/v3"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -15,7 +17,8 @@ import (
 
 func TestCronRun(t *testing.T){
 	//DoTime()
-	Remind()
+	//Remind()
+	getUrl()
 }
 
 func DoByFixTime() {
@@ -32,6 +35,16 @@ func DoByFixTime() {
 func getToken() []byte {
 	//return []byte("3250980ecd05028c40637004d97ce24a") // Clement Li
 	return []byte("adb08695039522366c4a645e1e6a3dd4") // dx robot
+}
+
+func getUrl() {
+	urlValues := url.Values{}
+	urlValues.Add("labels","comp/data")
+	resp, _ := http.PostForm("http://34.92.52.47/predict",urlValues)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	participants := string(body[:])
+	fmt.Println(participants)
 }
 
 func Remind() {
@@ -63,38 +76,6 @@ func Remind() {
 			return
 		}
 	}
-}
-
-func DoPR(){
-	owner := "OpenEuler"
-	repo := "iSulad"
-	state := "closed"
-	perPage := 100
-	cz := time.FixedZone("CST", 8*3600)
-	csvFile, err := os.Create("../src/data/IssueResAlert.csv")
-	if err != nil {
-		panic(err)
-	}
-	defer csvFile.Close()
-	csvFile.WriteString("\xEF\xBB\xBF")
-	w := csv.NewWriter(csvFile)
-	c := gitee_utils.NewClient(getToken)
-
-	opt := gitee_utils.ListPullRequestOpt{
-		State:    "all",
-	}
-
-	prs, res := c.GetPullRequests(owner, repo, opt)
-	if res != nil {
-		fmt.Println(res.Error())
-		return
-	} else {
-		for _, pr := range prs {
-			pr.Body
-		}
-	}
-
-
 }
 
 func DoTime() {
