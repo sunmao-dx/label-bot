@@ -3,6 +3,7 @@ package gitee_utils
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -433,6 +434,25 @@ func (c *client) ListIssues(owner, repo, state, since, createAt string, page, pe
 func (c *client) ListLabels(owner, repo string) ([]sdk.Label ,error) {
 	labels, _, err := c.ac.LabelsApi.GetV5ReposOwnerRepoLabels(context.Background(), owner, repo, nil)
 	return labels, formatErr(err, "list labels")
+}
+
+func (c *client) GetRecommendation(labels string) (string, error) {
+	// create path and map variables
+	localVarPath := "http://34.92.52.47:8080/predict?labels={labels}"
+	localVarPath = strings.Replace(localVarPath, "{"+"labels"+"}", fmt.Sprintf("%v", labels), -1)
+	fmt.Println(localVarPath)
+	resp, err :=   http.Get(localVarPath)
+	if err != nil {
+		// handle error
+		formatErr(err, "request error")
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		formatErr(err, "request error")
+	}
+	participants := string(body[:])
+	return participants, formatErr(err, "GetRecommendation")
 }
 
 func formatErr(err error, doWhat string) error {

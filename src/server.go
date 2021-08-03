@@ -33,6 +33,10 @@ func getToken() []byte {
 	return []byte("adb08695039522366c4a645e1e6a3dd4")
 }
 
+func getMLToken() string {
+	return "eyJhbGciOiJIUzUxMiIsImlhdCI6MTYyNzkwNDc3OSwiZXhwIjoxNjI3OTA4Mzc5fQ.eyJpZCI6Imxva2kifQ.lwmt3yKzmqVdzHdEcFWQxuSw_g40JOBPiMZHIOEmybJTiumkL0G3U7x04MqlKWJFFUWsA4RjZt0UuAffocBddw"
+}
+
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Event.")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
@@ -202,6 +206,13 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		}
 		if ignore == false {
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
+			if res != nil {
+				fmt.Println(res.Error())
+				return
+			}
+		} else {
+			participants := getRecommendation(c, issueInit)
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, participants)
 			if res != nil {
 				fmt.Println(res.Error())
 				return
@@ -428,6 +439,20 @@ func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 	} else {
 		return true
 	}
+}
+
+func getRecommendation(c gitee_utils.Client, labels []gitee.LabelHook) string {
+	var labelArr []string
+	for _, label:= range labels {
+		labelArr = append(labelArr, label.Name)
+	}
+	labelStr := strings.Join(labelArr,",")
+	participants, res := c.GetRecommendation(labelStr)
+	if res != nil {
+		fmt.Println(res.Error())
+		return ""
+	}
+	return participants
 }
 
 func loadFile(path, fileType string) error {

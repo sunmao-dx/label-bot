@@ -45,6 +45,7 @@ type Client interface {
 
 	ListIssues(owner, repo, state, since, createAt string, page, perPage int) ([]sdk.Issue, *http.Response, error)
 	ListLabels(owner, repo string) ([]sdk.Label ,error)
+	GetRecommendation(labels string) (string, error)
 }
 
 type ListPullRequestOpt struct {
