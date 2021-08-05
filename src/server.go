@@ -16,6 +16,7 @@ var JsonByte []byte
 var prComment []byte
 var issueComment []byte
 var decisionComment []byte
+var partiComment []byte
 
 var (
 	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|users|0|1|2)\s*(.*?)\s*$`)
@@ -178,9 +179,12 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			for _, strLabel := range labelFind {
 				strLabels = strLabels + "//" + strLabel + "\n"
 			}
-			helloWord := "hello, @" + issueMaker + assigneeStr + " , we suggest you add some labels like:" + "\n"
-			helloWordCn := "你好, @" + issueMaker + assigneeStr + " , 建议您为这个issue打上标签:" + "\n"
-			labelWord := helloWord + helloWordCn + strLabels
+			partiTemp := string(partiComment[:])
+			helloWord := ""
+			helloWord = strings.Replace(partiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+			helloWord = strings.Replace(partiTemp, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
+
+			labelWord := helloWord + strLabels
 			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
 			if resLabel != nil {
 				fmt.Println(resLabel.Error())
@@ -212,6 +216,12 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		} else {
 			participants := getRecommendation(c, issueInit)
+			if participants != "" {
+				return
+			}
+
+
+
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, participants)
 			if res != nil {
 				fmt.Println(res.Error())
@@ -226,7 +236,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 				return
 			}
 		}
-
 	}
 }
 
@@ -473,6 +482,8 @@ func loadFile(path, fileType string) error {
 		prComment = byteValue
 	case fileType == "decision" :
 		decisionComment = byteValue
+	case fileType == "parti" :
+		partiComment = byteValue
 	default:
 		fmt.Printf("no filetype\n" )
 	}
@@ -484,6 +495,7 @@ func main() {
 	loadFile("src/data/issueComTemplate.md", "issue")
 	loadFile("src/data/decisionTemplate.md", "decision")
 	loadFile("src/data/prComTemplate.md", "pr")
+	loadFile("src/data/partiTemplate.md", "parti")
 	http.HandleFunc("/", ServeHTTP)
 	http.ListenAndServe(":8008", nil)
 }
