@@ -218,7 +218,11 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		} else {
 			if repo != "community"{
-				participants := getRecommendation(c, issueInit)
+				var labelArr []string
+				for _, label:= range issueInit {
+					labelArr = append(labelArr, label.Name)
+				}
+				participants := getRecommendation(c, labelArr)
 				if participants == "" {
 					return
 				}
@@ -302,6 +306,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	issueMaker := i.Issue.User.Login
 	assigneeStr := ""
 	decisionTemp := string(decisionComment[:])
+	partiAiTemp := string(partiAiComment[:])
 	if i.Issue.Assignee != nil{
 		assignee = i.Issue.Assignee.Login
 		assigneeStr = " @" + assignee + " "
@@ -343,12 +348,32 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			}
 			return
 		}
-		fmt.Println(labelsToAdd)
 		assignee = getLabelAssignee(JsonByte, labelsToAdd)
 		if len(labelStrs) != 0{
 			labelsToAdd = append(labelsToAdd, labelStrs...)
 		}
 		labelsToAddStr = strings.Join(labelsToAdd,",")
+
+		if repo != "community"{
+			participants := getRecommendation(c, labelsToAdd)
+			if participants == "" {
+				return
+			}
+			partiArr := strings.Split(participants, ",")
+			issueAssignee := partiArr[0]
+			var coAssigneeToAdd []string
+			coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
+			coAssignee := strings.Join(coAssigneeToAdd, ",")
+			participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+			participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
+			participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
+			if res != nil {
+				fmt.Println(res.Error())
+				return
+			}
+		}
+
 		rese := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 		if rese != nil {
 			fmt.Println(rese.Error())
@@ -459,10 +484,10 @@ func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 	}
 }
 
-func getRecommendation(c gitee_utils.Client, labels []gitee.LabelHook) string {
+func getRecommendation(c gitee_utils.Client, labels []string) string {
 	var labelArr []string
 	for _, label:= range labels {
-		labelArr = append(labelArr, label.Name)
+		labelArr = append(labelArr, label)
 	}
 	labelStr := strings.Join(labelArr,",")
 	participants, res := c.GetRecommendation(labelStr)
