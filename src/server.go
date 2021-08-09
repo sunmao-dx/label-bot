@@ -17,6 +17,7 @@ var prComment []byte
 var issueComment []byte
 var decisionComment []byte
 var partiComment []byte
+var partiAiComment []byte
 
 var (
 	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|users|0|1|2)\s*(.*?)\s*$`)
@@ -94,6 +95,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	decision := false
 	issueTemp := string(issueComment[:])
 	decisionTemp := string(decisionComment[:])
+	partiAiTemp := string(partiAiComment[:])
 	assigneeStr := ""
 
 	c := gitee_utils.NewClient(getToken)
@@ -182,7 +184,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			partiTemp := string(partiComment[:])
 			helloWord := ""
 			helloWord = strings.Replace(partiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-			helloWord = strings.Replace(partiTemp, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
+			helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
 
 			labelWord := helloWord + strLabels
 			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
@@ -215,17 +217,24 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 				return
 			}
 		} else {
-			participants := getRecommendation(c, issueInit)
-			if participants != "" {
-				return
-			}
-
-
-
-			res := c.CreateGiteeIssueComment(org, repo, issueNum, participants)
-			if res != nil {
-				fmt.Println(res.Error())
-				return
+			if repo != "community"{
+				participants := getRecommendation(c, issueInit)
+				if participants == "" {
+					return
+				}
+				partiArr := strings.Split(participants, ",")
+				issueAssignee := partiArr[0]
+				var coAssigneeToAdd []string
+				coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
+				coAssignee := strings.Join(coAssigneeToAdd, ",")
+				participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+				participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
+				participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
+				res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
+				if res != nil {
+					fmt.Println(res.Error())
+					return
+				}
 			}
 		}
 		if decision == true {
@@ -484,6 +493,8 @@ func loadFile(path, fileType string) error {
 		decisionComment = byteValue
 	case fileType == "parti" :
 		partiComment = byteValue
+	case fileType == "partiAI" :
+		partiAiComment = byteValue
 	default:
 		fmt.Printf("no filetype\n" )
 	}
@@ -496,6 +507,7 @@ func main() {
 	loadFile("src/data/decisionTemplate.md", "decision")
 	loadFile("src/data/prComTemplate.md", "pr")
 	loadFile("src/data/partiTemplate.md", "parti")
+	loadFile("src/data/partiTemplate_ai.md", "partiAI")
 	http.HandleFunc("/", ServeHTTP)
 	http.ListenAndServe(":8008", nil)
 }
