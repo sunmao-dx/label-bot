@@ -18,6 +18,7 @@ var issueComment []byte
 var decisionComment []byte
 var partiComment []byte
 var partiAiComment []byte
+var token []byte
 
 var (
 	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|users|0|1|2)\s*(.*?)\s*$`)
@@ -32,11 +33,7 @@ type Mentor struct {
 }
 
 func getToken() []byte {
-	return []byte("adb08695039522366c4a645e1e6a3dd4")
-}
-
-func getMLToken() string {
-	return "eyJhbGciOiJIUzUxMiIsImlhdCI6MTYyNzkwNDc3OSwiZXhwIjoxNjI3OTA4Mzc5fQ.eyJpZCI6Imxva2kifQ.lwmt3yKzmqVdzHdEcFWQxuSw_g40JOBPiMZHIOEmybJTiumkL0G3U7x04MqlKWJFFUWsA4RjZt0UuAffocBddw"
+	return token
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -520,19 +517,26 @@ func loadFile(path, fileType string) error {
 		partiComment = byteValue
 	case fileType == "partiAI" :
 		partiAiComment = byteValue
+	case fileType == "token" :
+		token = byteValue
 	default:
 		fmt.Printf("no filetype\n" )
 	}
 	return nil
 }
 
-func main() {
+func configFile() {
 	loadFile("src/data/mentor.json", "json")
 	loadFile("src/data/issueComTemplate.md", "issue")
 	loadFile("src/data/decisionTemplate.md", "decision")
 	loadFile("src/data/prComTemplate.md", "pr")
 	loadFile("src/data/partiTemplate.md", "parti")
 	loadFile("src/data/partiTemplate_ai.md", "partiAI")
+	loadFile("src/data/token.md", "token")
+}
+
+func main() {
+	configFile()
 	http.HandleFunc("/", ServeHTTP)
 	http.ListenAndServe(":8008", nil)
 }
