@@ -59,12 +59,12 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		go handleCommentEvent(&ic)
-	case "Merge Request Hook":
-		var ip gitee.PullRequestEvent
-		if err := json.Unmarshal(payload, &ip); err != nil {
-			return
-		}
-		go handlePullRequestEvent(&ip)
+	//case "Merge Request Hook":
+		//var ip gitee.PullRequestEvent
+		//if err := json.Unmarshal(payload, &ip); err != nil {
+		//	return
+		//}
+		//go handlePullRequestEvent(&ip)
 	default:
 		return
 	}
@@ -249,40 +249,12 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 }
 
-func handlePullRequestEvent(i *gitee.PullRequestEvent) {
-	if *(i.Action) != "open" {
-		return
-	}
-	prNum := i.PullRequest.Number
-	org := i.Repository.Namespace
-	repo := i.Repository.Name
-	prBody := i.PullRequest.Body
-	prTemp := string(prComment[:])
-	c := gitee_utils.NewClient(getToken)
-	res := c.CreatePRComment(org, repo, int(prNum), prTemp)
-	if res != nil {
-		fmt.Println(res.Error())
-		return
-	}
-
-	var labelsToAdd []string
-	labelMatches := labelRegex.FindAllStringSubmatch(prBody, -1)
-	if len(labelMatches) != 0 {
-		labelsToAdd = getLabelsFromREMatches(labelMatches)
-		rese := c.AddPRLabel(org, repo, int(prNum), labelsToAdd)
-		if rese != nil {
-			fmt.Println(rese.Error())
-			return
-		}
-	}
-}
-
 func handleCommentEvent(i *gitee.NoteEvent) {
 	switch *(i.NoteableType) {
 	case "Issue":
 		go handleIssueCommentEvent(i)
-	case "PullRequest":
-		go handlePRCommentEvent(i)
+	//case "PullRequest":
+	//	go handlePRCommentEvent(i)
 	default:
 		return
 	}

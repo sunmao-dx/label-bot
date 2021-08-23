@@ -18,7 +18,8 @@ import (
 func TestCronRun(t *testing.T){
 	//DoTime()
 	//Remind()
-	getUrl()
+	//getUrl()
+	readLabels()
 }
 
 func DoByFixTime() {
@@ -77,6 +78,40 @@ func Remind() {
 		}
 	}
 }
+
+func readLabels() {
+	owner := "mindspore"
+	repo := "mindspore"
+	csvFile, err := os.Create("../src/data/labels.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer csvFile.Close()
+	csvFile.WriteString("\xEF\xBB\xBF")
+	w := csv.NewWriter(csvFile)
+	c := gitee_utils.NewClient(getToken)
+
+	lbs, err := c.ListLabels(owner, repo)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	for _, o := range lbs {
+		nameStr := o.Name
+		w.Write([]string{nameStr})
+		w.Flush()
+	}
+
+
+
+	//w.Write([]string{issue.User.Login, assigneeInit ,issue.Number, issue.UpdatedAt.In(cz).Format(time.RFC3339)})
+	//w.Flush()
+
+
+}
+
 
 func DoTime() {
 	owner := "mindspore"
