@@ -117,9 +117,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		var nameFind []string
 		labelBoMatches := labelRegexBody.FindAllStringSubmatch(issueBody, -1)
 
-		fmt.Println(issueBody)
-		fmt.Println(labelBoMatches)
-
 		if len(labelBoMatches) != 0 {
 			nameFind = getLabelsFromBodyMatches(labelBoMatches)
 		}
@@ -180,15 +177,22 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 
 		if len(labelFind) != 0 {
 			for _, strLabel := range labelFind {
-				strLabels = strLabels + "//" + strLabel + "\n"
+				strLabels = strLabels + "**//" + strLabel + "**" + "\n"
 			}
 			partiTemp := string(partiComment[:])
 			helloWord := ""
 			helloWord = strings.Replace(partiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-			helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
+			helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", issueMaker), -1)
 
-			labelWord := helloWord + strLabels
-			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, labelWord)
+			if strings.Contains(strLabels, "good-first-issue") {
+				helloWord = strings.Replace(helloWord, "{"+"goodissue"+"}", fmt.Sprintf("%v", ", 因为这个issue看起来是文档类问题, 适合新手开发者解决"), -1)
+			} else {
+				helloWord = strings.Replace(helloWord, "{"+"goodissue"+"}", fmt.Sprintf("%v", ""), -1)
+			}
+
+			helloWord = strings.Replace(helloWord, "{"+"label"+"}", fmt.Sprintf("%v", strLabels), -1)
+
+			resLabel := c.CreateGiteeIssueComment(org, repo, issueNum, helloWord)
 			if resLabel != nil {
 				fmt.Println(resLabel.Error())
 				return
@@ -298,6 +302,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		}
 		var labelsToAdd []string
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
+
 		if assignee != "" {
 			if len(labelStrs) != 0{
 				labelsToAdd = append(labelsToAdd, labelStrs...)
@@ -328,22 +333,26 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		labelsToAddStr = strings.Join(labelsToAdd,",")
 
 		if repo != "community"{
-			participants := getRecommendation(c, labelsToAdd)
-			if participants == "" {
-				return
-			}
-			partiArr := strings.Split(participants, ",")
-			issueAssignee := partiArr[0]
-			var coAssigneeToAdd []string
-			coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
-			coAssignee := strings.Join(coAssigneeToAdd, ",")
-			participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-			participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
-			participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
-			res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
-			if res != nil {
-				fmt.Println(res.Error())
-				return
+			if strings.Contains(labelsToAddStr,"comp/") ||
+				strings.Contains(labelsToAddStr,"sig/") ||
+				strings.Contains(labelsToAddStr,"wg/") {
+				participants := getRecommendation(c, labelsToAdd)
+				if participants == "" {
+					return
+				}
+				partiArr := strings.Split(participants, ",")
+				issueAssignee := partiArr[0]
+				var coAssigneeToAdd []string
+				coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
+				coAssignee := strings.Join(coAssigneeToAdd, ",")
+				participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+				participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
+				participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
+				res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
+				if res != nil {
+					fmt.Println(res.Error())
+					return
+				}
 			}
 		}
 
@@ -352,6 +361,16 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			fmt.Println(rese.Error())
 			return
 		}
+
+		if strings.Contains(noteBody,"good-first-issue") {
+			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md"
+			res := c.CreateGiteeIssueComment(org, repo, issueNum, astr)
+			if res != nil {
+				fmt.Println(res.Error())
+				return
+			}
+		}
+
 		for _, label:= range labelsToAdd {
 			if label == "kind/decision" {
 				Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"

@@ -5,11 +5,25 @@
     "name": "jonyguo"
   },
   {
+    "directory": "docs",
+    "label": "good-first-issue",
+    "name": "clement_li"
+  },
+  {
+    "directory": "space_holder",
+    "label": "sig/doc",
+    "name": "zhunaipan"
+  },
+  {
     "directory": "parallel",
     "label": "comp/parallel",
     "name": "stsuteng"
   },
-  c
+  {
+    "directory": "optimizer",
+    "label": "comp/optimizer",
+    "name": "zh_qh"
+  },
   {
     "directory": "pynative",
     "label": "comp/pynative",
@@ -198,11 +212,6 @@
   {
     "directory": "space_holder",
     "label": "sig/DX",
-    "name": "clement_li"
-  },
-  {
-    "directory": "docs",
-    "label": "good-first-issue",
     "name": "clement_li"
   }
 ]
