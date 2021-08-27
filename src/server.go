@@ -362,14 +362,14 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			return
 		}
 
-		if strings.Contains(noteBody,"good-first-issue") {
-			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md"
-			res := c.CreateGiteeIssueComment(org, repo, issueNum, astr)
-			if res != nil {
-				fmt.Println(res.Error())
-				return
-			}
+
+		astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md"
+		res3 := c.CreateGiteeIssueComment(org, repo, issueNum, astr)
+		if res3 != nil {
+			fmt.Println(res3.Error())
+			return
 		}
+
 
 		for _, label:= range labelsToAdd {
 			if label == "kind/decision" {
