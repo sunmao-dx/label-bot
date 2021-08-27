@@ -9,11 +9,7 @@
     "label": "comp/parallel",
     "name": "stsuteng"
   },
-  {
-    "directory": "optimizer",
-    "label": "comp/optimizer",
-    "name": "zh_qh"
-  },
+  c
   {
     "directory": "pynative",
     "label": "comp/pynative",
@@ -202,6 +198,11 @@
   {
     "directory": "space_holder",
     "label": "sig/DX",
+    "name": "clement_li"
+  },
+  {
+    "directory": "docs",
+    "label": "good-first-issue",
     "name": "clement_li"
   }
 ]

@@ -16,10 +16,10 @@ import (
 )
 
 func TestCronRun(t *testing.T){
-	//DoTime()
+	DoTime()
 	//Remind()
 	//getUrl()
-	readLabels()
+	//DoIssueLabel()
 }
 
 func DoByFixTime() {
@@ -103,13 +103,6 @@ func readLabels() {
 		w.Write([]string{nameStr})
 		w.Flush()
 	}
-
-
-
-	//w.Write([]string{issue.User.Login, assigneeInit ,issue.Number, issue.UpdatedAt.In(cz).Format(time.RFC3339)})
-	//w.Flush()
-
-
 }
 
 
@@ -161,6 +154,51 @@ func DoTime() {
 						assigneeInit = ""
 					}
 				}
+			}
+		}
+	}
+}
+
+func DoIssueLabel() {
+	owner := "mindspore"
+	repo := "mindspore"
+	state := "all"
+	perPage := 100
+	xx := 0
+	xxstr := ""
+	cz := time.FixedZone("CST", 8*3600)
+	fmt.Println(time.Now().AddDate(0,0,-30).In(cz).Format(time.RFC3339))
+	//time.Sleep(time.Minute * 1)
+
+	since := time.Now().AddDate(0,0,-15).In(cz)
+
+	//fromStr := time.Now().AddDate(0,0,-30).In(cz).Format(time.RFC3339)
+
+	csvFile, err := os.Create("../src/data/IssueLabels.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer csvFile.Close()
+	csvFile.WriteString("\xEF\xBB\xBF")
+	w := csv.NewWriter(csvFile)
+	c := gitee_utils.NewClient(getToken)
+	k:=14
+	for i := 1; i <= k; i++ {
+		issues, _, res := c.ListIssuesA(owner, repo, state, "", i, perPage)
+		if res != nil {
+			fmt.Println(res.Error())
+			return
+		} else {
+			for _, issue := range issues {
+				if issue.UpdatedAt.In(cz).Before(since) == false{
+					continue
+				}
+				xx = len(issue.Labels)
+				xxstr = strconv.Itoa(xx)
+
+				w.Write([]string{issue.User.Login ,issue.Number, issue.UpdatedAt.In(cz).Format(time.RFC3339), xxstr})
+				w.Flush()
+				xxstr = ""
 			}
 		}
 	}

@@ -432,6 +432,16 @@ func (c *client) ListIssues(owner, repo, state, since, createAt string, page, pe
 	return issues, res,formatErr(err, "list issues")
 }
 
+func (c *client) ListIssuesA(owner, repo, state, createAt string, page, perPage int) ([]sdk.Issue, *http.Response ,error) {
+	oState := optional.NewString(state)
+	oPage := optional.NewInt32(int32(page))
+	oPerPage := optional.NewInt32(int32(perPage))
+	oCreateAt := optional.NewString(createAt)
+	issueParam := sdk.GetV5ReposOwnerRepoIssuesOpts{State: oState, Page: oPage, PerPage: oPerPage, CreatedAt: oCreateAt}
+	issues, res, err := c.ac.IssuesApi.GetV5ReposOwnerRepoIssues(context.Background(), owner, repo, &issueParam)
+	return issues, res,formatErr(err, "list issues")
+}
+
 func (c *client) ListLabels(owner, repo string) ([]sdk.Label ,error) {
 	labels, _, err := c.ac.LabelsApi.GetV5ReposOwnerRepoLabels(context.Background(), owner, repo, nil)
 	return labels, formatErr(err, "list labels")

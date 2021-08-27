@@ -44,6 +44,7 @@ type Client interface {
 	GetUserEnt(ent, login string) (sdk.EnterpriseMember ,error)
 
 	ListIssues(owner, repo, state, since, createAt string, page, perPage int) ([]sdk.Issue, *http.Response, error)
+	ListIssuesA(owner, repo, state, createAt string, page, perPage int) ([]sdk.Issue, *http.Response, error)
 	ListLabels(owner, repo string) ([]sdk.Label ,error)
 	GetRecommendation(labels string) (string, error)
 }
