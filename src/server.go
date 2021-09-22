@@ -76,7 +76,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	assignee := ""
 	strLabels := ""
-	orgOrigin := "mind_spore"
+	orgOrigin := "all_for_test"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
@@ -160,6 +160,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
 			break
 		}
+
 		assignee = getLabelAssignee(JsonByte, labelsToAdd)
 		if isUserInEnt(issueMaker, orgOrigin, c) {
 			assignee = issueMaker
@@ -294,7 +295,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		nameStr := o.Name
 		labelStrs = append(labelStrs, nameStr)
 	}
-	if name != "mindspore-dx-bot" {
+	if name != "test-bot" {
 		c := gitee_utils.NewClient(getToken)
 		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
 		if len(labelMatches) == 0 {
@@ -395,7 +396,7 @@ func handlePRCommentEvent(i *gitee.NoteEvent) {
 	repo := i.Repository.Name
 	name := i.Comment.User.Name
 	noteBody := i.Comment.Body
-	if name != "mindspore-dx-bot" {
+	if name != "test-bot" {
 		c := gitee_utils.NewClient(getToken)
 		var labelsToAdd []string
 		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
