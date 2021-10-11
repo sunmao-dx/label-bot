@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	gitee_utils "gitee.com/lizi/test-bot/src/gitee-utils"
-	"gitee.com/openeuler/go-gitee/gitee"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
+
+	gitee_utils "gitee.com/lizi/test-bot/src/gitee-utils"
+	"gitee.com/openeuler/go-gitee/gitee"
 )
 
 var JsonByte []byte
@@ -21,13 +22,13 @@ var partiAiComment []byte
 var token []byte
 
 var (
-	labelRegex    = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|user|stage|func|attr|0|1|2)\s*(.*?)\s*$`)
-	labelRegexTitle    = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
-	labelRegexBody    = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/docs/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
+	labelRegex      = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|user|stage|func|attr|0|1|2)\s*(.*?)\s*$`)
+	labelRegexTitle = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
+	labelRegexBody  = regexp.MustCompile(`^(.*)(/ops/|/kernel/|/docs/|/minddata/|/parallel/|/optimizer/|/pynative/|/kernel_compiler/|/device/|/parse/|/cxx_api/|/debug/|/ps/|/pybind_api/|/transform/|/vm/|/communication/|/dataset/|/lite/|/mindrecord/|/nn/|/profiler/|/train/|/model_zoo/|/akg/)\s*(.*?)\s*$`)
 )
 
 type Mentor struct {
-	Dir string `json:"directory"`
+	Dir   string `json:"directory"`
 	Label string `json:"label"`
 	Name  string `json:"name"`
 }
@@ -60,11 +61,11 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		go handleCommentEvent(&ic)
 	//case "Merge Request Hook":
-		//var ip gitee.PullRequestEvent
-		//if err := json.Unmarshal(payload, &ip); err != nil {
-		//	return
-		//}
-		//go handlePullRequestEvent(&ip)
+	//var ip gitee.PullRequestEvent
+	//if err := json.Unmarshal(payload, &ip); err != nil {
+	//	return
+	//}
+	//go handlePullRequestEvent(&ip)
 	default:
 		return
 	}
@@ -85,7 +86,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	issueTitle := i.Issue.Title
 	issueType := i.Issue.TypeName
 	issueInit := i.Issue.Labels
-    assigneeInit := i.Issue.Assignee
+	assigneeInit := i.Issue.Assignee
 	issueMaker := i.Issue.User.Login
 
 	ignore := false
@@ -96,7 +97,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	assigneeStr := ""
 
 	c := gitee_utils.NewClient(getToken)
-
 
 	if len(issueInit) == 0 {
 		res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
@@ -169,7 +169,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			assignee = assigneeInit.Login
 			assigneeStr = " @" + assignee + " "
 		}
-		labelsToAdd_str = strings.Join(labelsToAdd,",")
+		labelsToAdd_str = strings.Join(labelsToAdd, ",")
 		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
 		if rese != nil {
 			fmt.Println(rese.Error())
@@ -204,10 +204,10 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			assignee = assigneeInit.Login
 			assigneeStr = " @" + assignee + " "
 		}
-		for _, label:= range issueInit {
-			if strings.Contains(label.Name,"comp/") ||
-				strings.Contains(label.Name,"sig/") ||
-				strings.Contains(label.Name,"wg/") {
+		for _, label := range issueInit {
+			if strings.Contains(label.Name, "comp/") ||
+				strings.Contains(label.Name, "sig/") ||
+				strings.Contains(label.Name, "wg/") {
 				ignore = true
 				break
 			}
@@ -223,9 +223,9 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 				return
 			}
 		} else {
-			if repo != "community"{
+			if repo != "community" {
 				var labelArr []string
-				for _, label:= range issueInit {
+				for _, label := range issueInit {
 					labelArr = append(labelArr, label.Name)
 				}
 				participants := getRecommendation(c, labelArr)
@@ -285,7 +285,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	assigneeStr := ""
 	decisionTemp := string(decisionComment[:])
 	partiAiTemp := string(partiAiComment[:])
-	if i.Issue.Assignee != nil{
+	if i.Issue.Assignee != nil {
 		assignee = i.Issue.Assignee.Login
 		assigneeStr = " @" + assignee + " "
 		fmt.Println(assignee)
@@ -304,7 +304,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		var labelsToAdd []string
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 
-		if strings.Contains(noteBody,"good-first-issue") {
+		if strings.Contains(noteBody, "good-first-issue") {
 			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/mindspore/mindspore/blob/master/CONTRIBUTING.md"
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, astr)
 			if res != nil {
@@ -314,17 +314,17 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		}
 
 		if assignee != "" {
-			if len(labelStrs) != 0{
+			if len(labelStrs) != 0 {
 				labelsToAdd = append(labelsToAdd, labelStrs...)
 			}
 			labelsToAdd = append(labelsToAdd, labelStrs...)
-			labelsToAddStr = strings.Join(labelsToAdd,",")
+			labelsToAddStr = strings.Join(labelsToAdd, ",")
 			resd := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 			if resd != nil {
 				fmt.Println(resd.Error())
 				return
 			}
-			for _, label:= range labelsToAdd {
+			for _, label := range labelsToAdd {
 				if label == "kind/decision" {
 					Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
 					res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
@@ -337,15 +337,15 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			return
 		}
 		assignee = getLabelAssignee(JsonByte, labelsToAdd)
-		if len(labelStrs) != 0{
+		if len(labelStrs) != 0 {
 			labelsToAdd = append(labelsToAdd, labelStrs...)
 		}
-		labelsToAddStr = strings.Join(labelsToAdd,",")
+		labelsToAddStr = strings.Join(labelsToAdd, ",")
 
-		if repo != "community"{
-			if strings.Contains(labelsToAddStr,"comp/") ||
-				strings.Contains(labelsToAddStr,"sig/") ||
-				strings.Contains(labelsToAddStr,"wg/") {
+		if repo != "community" {
+			if strings.Contains(labelsToAddStr, "comp/") ||
+				strings.Contains(labelsToAddStr, "sig/") ||
+				strings.Contains(labelsToAddStr, "wg/") {
 				participants := getRecommendation(c, labelsToAdd)
 				if participants == "" {
 					return
@@ -372,9 +372,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 			return
 		}
 
-
-
-		for _, label:= range labelsToAdd {
+		for _, label := range labelsToAdd {
 			if label == "kind/decision" {
 				Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
 				res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
@@ -421,7 +419,7 @@ func checkRepository(payload []byte, rep *gitee.ProjectHook) error {
 func getLabelsFromREMatches(matches [][]string) []string {
 	var labels []string
 	for _, match := range matches {
-		label := strings.TrimSpace(strings.TrimLeft(match[0],"//"))
+		label := strings.TrimSpace(strings.TrimLeft(match[0], "//"))
 		labels = append(labels, label)
 	}
 	return labels
@@ -430,7 +428,7 @@ func getLabelsFromREMatches(matches [][]string) []string {
 func getLabelsFromBodyMatches(matches [][]string) []string {
 	var labels []string
 	for _, match := range matches {
-		label := strings.ToLower(strings.TrimSpace(strings.Trim(match[2],"/")))
+		label := strings.ToLower(strings.TrimSpace(strings.Trim(match[2], "/")))
 		labels = append(labels, label)
 	}
 	return labels
@@ -443,8 +441,8 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 		return ""
 	}
 	for i := range mentors {
-		for j := range labels{
-			if mentors[i].Label == labels[j]{
+		for j := range labels {
+			if mentors[i].Label == labels[j] {
 				return mentors[i].Name
 			}
 		}
@@ -460,8 +458,8 @@ func getLabel(mentorsJson []byte, dirs []string) []string {
 		return labels
 	}
 	for i := range mentors {
-		for j := range dirs{
-			if mentors[i].Dir == dirs[j]{
+		for j := range dirs {
+			if mentors[i].Dir == dirs[j] {
 				labels = append(labels, mentors[i].Label)
 			}
 		}
@@ -481,10 +479,10 @@ func isUserInEnt(login, entOrigin string, c gitee_utils.Client) bool {
 
 func getRecommendation(c gitee_utils.Client, labels []string) string {
 	var labelArr []string
-	for _, label:= range labels {
+	for _, label := range labels {
 		labelArr = append(labelArr, label)
 	}
-	labelStr := strings.Join(labelArr,",")
+	labelStr := strings.Join(labelArr, ",")
 	participants, res := c.GetRecommendation(labelStr)
 	if res != nil {
 		fmt.Println(res.Error())
@@ -503,22 +501,22 @@ func loadFile(path, fileType string) error {
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	switch {
-	case fileType == "json" :
+	case fileType == "json":
 		JsonByte = byteValue
-	case fileType == "issue" :
+	case fileType == "issue":
 		issueComment = byteValue
 	case fileType == "pr":
 		prComment = byteValue
-	case fileType == "decision" :
+	case fileType == "decision":
 		decisionComment = byteValue
-	case fileType == "parti" :
+	case fileType == "parti":
 		partiComment = byteValue
-	case fileType == "partiAI" :
+	case fileType == "partiAI":
 		partiAiComment = byteValue
-	case fileType == "token" :
+	case fileType == "token":
 		token = byteValue
 	default:
-		fmt.Printf("no filetype\n" )
+		fmt.Printf("no filetype\n")
 	}
 	return nil
 }
