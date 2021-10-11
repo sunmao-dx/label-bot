@@ -161,14 +161,15 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			break
 		}
 
-		assignee = getLabelAssignee(JsonByte, labelsToAdd)
-		if isUserInEnt(issueMaker, orgOrigin, c) {
-			assignee = issueMaker
-		}
 		if assigneeInit != nil {
 			assignee = assigneeInit.Login
-			assigneeStr = " @" + assignee + " "
+		} else if isUserInEnt(issueMaker, orgOrigin, c) {
+			assignee = issueMaker
+		} else {
+			assignee = getLabelAssignee(JsonByte, labelsToAdd)
 		}
+		assigneeStr = " @" + assignee + " "
+
 		labelsToAdd_str = strings.Join(labelsToAdd, ",")
 		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
 		if rese != nil {
@@ -183,7 +184,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			partiTemp := string(partiComment[:])
 			helloWord := ""
 			helloWord = strings.Replace(partiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-			helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", issueMaker), -1)
+			helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
 
 			if strings.Contains(strLabels, "good-first-issue") {
 				helloWord = strings.Replace(helloWord, "{"+"goodissue"+"}", fmt.Sprintf("%v", ", 因为这个issue看起来是文档类问题, 适合新手开发者解决"), -1)
