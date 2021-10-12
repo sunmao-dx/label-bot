@@ -20,6 +20,7 @@ var decisionComment []byte
 var partiComment []byte
 var partiAiComment []byte
 var token []byte
+var assignComment []byte
 
 var (
 	labelRegex      = regexp.MustCompile(`(?m)^//(comp|sig|good|bug|wg|stat|kind|device|env|ci|mindspore|DFX|usability|user|stage|func|attr|0|1|2)\s*(.*?)\s*$`)
@@ -89,11 +90,11 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	assigneeInit := i.Issue.Assignee
 	issueMaker := i.Issue.User.Login
 
-	ignore := false
+	// ignore := false
 	decision := false
 	issueTemp := string(issueComment[:])
 	decisionTemp := string(decisionComment[:])
-	partiAiTemp := string(partiAiComment[:])
+	// partiAiTemp := string(partiAiComment[:])
 	assigneeStr := ""
 
 	c := gitee_utils.NewClient(getToken)
@@ -201,54 +202,78 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		}
 	} else {
-		if assigneeInit != nil {
-			assignee = assigneeInit.Login
-			assigneeStr = " @" + assignee + " "
+
+		res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
+		if res != nil {
+			fmt.Println(res.Error())
+			return
 		}
+
+		var labelFindTemp []string
 		for _, label := range issueInit {
-			if strings.Contains(label.Name, "comp/") ||
-				strings.Contains(label.Name, "sig/") ||
-				strings.Contains(label.Name, "wg/") {
-				ignore = true
-				break
-			}
+			// if strings.Contains(label.Name, "comp/") ||
+			// 	strings.Contains(label.Name, "sig/") ||
+			// 	strings.Contains(label.Name, "wg/") {
+			// 	ignore = false
+			// 	break
+			// }
+
+			strings.Join(labelFindTemp, label.Name)
 			if label.Name == "kind/decision" {
 				decision = true
-				break
 			}
 		}
-		if ignore == false {
-			res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
-			if res != nil {
-				fmt.Println(res.Error())
+		if assigneeInit != nil {
+			assignee = assigneeInit.Login
+		} else if isUserInEnt(issueMaker, orgOrigin, c) {
+			assignee = issueMaker
+			rese := c.AssignGiteeIssue(org, repo, "", issueNum, assignee)
+			if rese != nil {
+				fmt.Println(rese.Error())
 				return
 			}
 		} else {
-			if repo != "community" {
-				var labelArr []string
-				for _, label := range issueInit {
-					labelArr = append(labelArr, label.Name)
-				}
-				participants := getRecommendation(c, labelArr)
-				if participants == "" {
-					return
-				}
-				partiArr := strings.Split(participants, ",")
-				issueAssignee := partiArr[0]
-				var coAssigneeToAdd []string
-				coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
-				coAssignee := strings.Join(coAssigneeToAdd, ",")
-				participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-				participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
-				participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
-				res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
-				if res != nil {
-					fmt.Println(res.Error())
-					return
-				}
+			assignTemp := string(assignComment[:])
+			assignee = getLabelAssignee(JsonByte, labelFindTemp)
+			assignTemp = strings.Replace(assignTemp, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
+			rs := c.CreateGiteeIssueComment(org, repo, issueNum, assignTemp)
+			if rs != nil {
+				fmt.Println(res.Error())
+				return
 			}
 		}
+		// if ignore == false {
+		//     res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
+		// 	if res != nil {
+		// 		fmt.Println(res.Error())
+		// 	}
+		// } else {
+		// 	if repo != "community" {
+		// 		var labelArr []string
+		// 		for _, label := range issueInit {
+		// 			labelArr = append(labelArr, label.Name)
+		// 		}
+		// 		participants := getRecommendation(c, labelArr)
+		// 		if participants == "" {
+		// 			return
+		// 		}
+		// 		partiArr := strings.Split(participants, ",")
+		// 		issueAssignee := partiArr[0]
+		// 		var coAssigneeToAdd []string
+		// 		coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
+		// 		coAssignee := strings.Join(coAssigneeToAdd, ",")
+		// 		participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+		// 		participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
+		// 		participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
+		// 		res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
+		// 		if res != nil {
+		// 			fmt.Println(res.Error())
+		// 			return
+		// 		}
+		// 	}
+		// }
 		if decision == true {
+			assigneeStr = " @" + assignee + " "
 			Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
 			if res != nil {
@@ -516,6 +541,8 @@ func loadFile(path, fileType string) error {
 		partiAiComment = byteValue
 	case fileType == "token":
 		token = byteValue
+	case fileType == "assign":
+		assignComment = byteValue
 	default:
 		fmt.Printf("no filetype\n")
 	}
@@ -530,6 +557,7 @@ func configFile() {
 	loadFile("src/data/partiTemplate.md", "parti")
 	loadFile("src/data/partiTemplate_ai.md", "partiAI")
 	loadFile("src/data/token.md", "token")
+	loadFile("src/data/assignTemplate.md", "assign")
 }
 
 func main() {
