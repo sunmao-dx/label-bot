@@ -242,36 +242,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 				return
 			}
 		}
-		// if ignore == false {
-		//     res := c.CreateGiteeIssueComment(org, repo, issueNum, issueTemp)
-		// 	if res != nil {
-		// 		fmt.Println(res.Error())
-		// 	}
-		// } else {
-		// 	if repo != "community" {
-		// 		var labelArr []string
-		// 		for _, label := range issueInit {
-		// 			labelArr = append(labelArr, label.Name)
-		// 		}
-		// 		participants := getRecommendation(c, labelArr)
-		// 		if participants == "" {
-		// 			return
-		// 		}
-		// 		partiArr := strings.Split(participants, ",")
-		// 		issueAssignee := partiArr[0]
-		// 		var coAssigneeToAdd []string
-		// 		coAssigneeToAdd = append(coAssigneeToAdd, partiArr[1:]...)
-		// 		coAssignee := strings.Join(coAssigneeToAdd, ",")
-		// 		participantsStr := strings.Replace(partiAiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
-		// 		participantsStr = strings.Replace(participantsStr, "{"+"issueAssignee"+"}", fmt.Sprintf("%v", issueAssignee), -1)
-		// 		participantsStr = strings.Replace(participantsStr, "{"+"issueCoAssignee"+"}", fmt.Sprintf("%v", coAssignee), -1)
-		// 		res := c.CreateGiteeIssueComment(org, repo, issueNum, participantsStr)
-		// 		if res != nil {
-		// 			fmt.Println(res.Error())
-		// 			return
-		// 		}
-		// 	}
-		// }
+
 		if decision == true {
 			assigneeStr = " @" + assignee + " "
 			Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
