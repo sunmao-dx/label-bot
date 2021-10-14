@@ -1,217 +1,122 @@
 [
   {
-    "directory": "minddata",
-    "label": "comp/data",
-    "name": "jonyguo"
+    "words": ["mailinglist", "maillist", "mail", "邮件", "邮箱", "subscribe", "订阅"],
+    "label": "mailing_list",
+    "name": "TommyLike"
   },
   {
-    "directory": "docs",
-    "label": "good-first-issue",
-    "name": "clement_li"
+    "words": ["etherpad", "meetingrecord", "会议记录"],
+    "label": "etherpad",
+    "name": "zengchen1024"
   },
   {
-    "directory": "space_holder",
-    "label": "sig/doc",
-    "name": "zhunaipan"
+    "words": ["cla", "CLA", "signagreement", "签署贡献者协议"],
+    "label": "CLA",
+    "name": "zengchen1024"
   },
   {
-    "directory": "parallel",
-    "label": "comp/parallel",
-    "name": "stsuteng"
+    "words": ["guarding", "jenkins", "staticcheck", "test", "compile", "robot", "测试", "编译", "检查"],
+    "label": "guarding",
+    "name": "miao_kaibo"
   },
   {
-    "directory": "optimizer",
-    "label": "comp/optimizer",
-    "name": "zh_qh"
+    "words": ["website", "blog", "mirror", "下载", "官网", "博客", "镜像"],
+    "label": "website",
+    "name": "lesliexx"
   },
   {
-    "directory": "pynative",
-    "label": "comp/pynative",
-    "name": "chujinjin"
+    "words": ["meeting", "会议", "例会"],
+    "label": "meeting",
+    "name": "liuqi469227928"
   },
   {
-    "directory": "kernel_compiler",
-    "label": "comp/kernel",
-    "name": "anyrenwei"
+    "words": ["sensitivewords", "敏感词"],
+    "label": "kind/sensitive_words",
+    "name": "haml"
   },
   {
-    "directory": "space_holder",
-    "label": "comp/runtime",
-    "name": "kisnwang"
+    "words": ["log", "日志"],
+    "label": "kind/log",
+    "name": "zhangjianjun_code"
   },
   {
-    "directory": "device",
-    "label": "comp/device",
-    "name": "kisnwang"
+    "words": ["docs", "documents", "文档"],
+    "label": "kind/docs",
+    "name": "lesliexx"
   },
   {
-    "directory": "space_holder",
-    "label": "comp/pipeline",
-    "name": "zh_qh"
+    "words": ["labelsetting", "标签设置"],
+    "label": "kind/label_setting",
+    "name": "zhongjun2"
   },
   {
-    "directory": "parse",
-    "label": "comp/parser",
-    "name": "zh_qh"
+    "words": ["access", "permission", "权限"],
+    "label": "kind/permission",
+    "name": "georgecao"
   },
   {
-    "directory": "cxx_api",
-    "label": "comp/cxx-api",
-    "name": "zhoufeng54"
+    "words": ["requirement", "featurerequest", "需求"],
+    "label": "king/feature_request",
+    "name": "zhengzhenyu"
   },
   {
-    "directory": "debug",
-    "label": "comp/debug",
-    "name": "lilongfei15"
+    "words": ["translation", "翻译"],
+    "label": "kind/translation",
+    "name": "lesliexx"
   },
   {
-    "directory": "ps",
-    "label": "comp/ps",
-    "name": "cristoval"
+    "words": ["bug", "BUG"],
+    "label": "bug/unconfirmed",
+    "name": "zhangjianjun_code"
   },
   {
-    "directory": "pybind_api",
-    "label": "comp/pybind-api",
-    "name": "kingxian"
+    "words": ["cve", "CVE"],
+    "label": "cve/pending",
+    "name": "zhangjianjun_code"
   },
   {
-    "directory": "transform",
-    "label": "comp/transform",
-    "name": "c_34"
+    "words": ["gitee", "Gitee"],
+    "label": "gitee",
+    "name": "zhangjianjun_code"
   },
   {
-    "directory": "vm",
-    "label": "comp/vm",
-    "name": "kisnwang"
+    "words": ["git", "Git"],
+    "label": "git",
+    "name": "zhangjianjun_code"
   },
   {
-    "directory": "communication",
-    "label": "comp/py-com",
-    "name": "stsuteng"
+    "words": ["scheduling", "调度"],
+    "label": "king/schduling",
+    "name": "georgecao"
   },
   {
-    "directory": "dataset",
-    "label": "comp/py-data",
-    "name": "jonyguo"
+    "words": ["obs", "OBS"],
+    "label": "build/obs",
+    "name": "georgecao"
   },
   {
-    "directory": "lite",
-    "label": "comp/mslite",
-    "name": "zhaizhiqiang"
+    "words": ["rpm", "RPM"],
+    "label": "build/rpm",
+    "name": "georgecao"
   },
   {
-    "directory": "mindrecord",
-    "label": "comp/mindrecord",
-    "name": "jonyguo"
+    "words": ["iso", "ISO"],
+    "label": "build/iso",
+    "name": "georgecao"
   },
   {
-    "directory": "nn",
-    "label": "comp/api",
-    "name": "kingxian"
+    "words": ["src-openeuler", "src-openEuler"],
+    "label": "repo/src-openeuler",
+    "name": "georgecao"
   },
   {
-    "directory": "ops",
-    "label": "comp/operator",
-    "name": "liangchenghui"
+    "words": ["openeuler", "openEuler"],
+    "label": "repo/openeuler",
+    "name": "georgecao"
   },
   {
-    "directory": "parallel",
-    "label": "comp/py-parallel",
-    "name": "stsuteng"
-  },
-  {
-    "directory": "profiler",
-    "label": "comp/py-profiler",
-    "name": "wangyue01"
-  },
-  {
-    "directory": "train",
-    "label": "comp/train",
-    "name": "kingxian"
-  },
-  {
-    "directory": "space_holder",
-    "label": "comp/build-install",
-    "name": "zhoufeng54"
-  },
-  {
-    "directory": "model_zoo",
-    "label": "comp/modelzoo",
-    "name": "c_34"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/frontend",
-    "name": "kingxian"
-  },
-  {
-    "directory": "kernel_compiler",
-    "label": "sig/compiler",
-    "name": "zh_qh"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/executor",
-    "name": "kisnwang"
-  },
-  {
-    "directory": "model_zoo",
-    "label": "sig/modelzoo",
-    "name": "c_34"
-  },
-  {
-    "directory": "minddata",
-    "label": "sig/data",
-    "name": "liucunwei"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/graph-engine",
-    "name": "youui"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/visualization",
-    "name": "gaocongli_hw"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/security",
-    "name": "randywangze"
-  },
-  {
-    "directory": "akg",
-    "label": "sig/akg",
-    "name": "anyrenwei"
-  },
-  {
-    "directory": "lite",
-    "label": "sig/mslite",
-    "name": "zhaizhiqiang"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/mdp",
-    "name": "jianfeichen"
-  },
-  {
-    "directory": "parallel",
-    "label": "sig/parallel",
-    "name": "dr-orange"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/adaptivetraining",
-    "name": "luomai-edin"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/serving",
-    "name": "xu-yfei"
-  },
-  {
-    "directory": "space_holder",
-    "label": "sig/DX",
-    "name": "clement_li"
+    "words": ["开源实习"],
+    "label": "activity/开源实习",
+    "name": "zhengzhenyu"
   }
 ]
