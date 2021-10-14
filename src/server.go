@@ -22,23 +22,24 @@ var partiAiComment []byte
 var token []byte
 var assignComment []byte
 var regexpWords = "(mailinglist|maillist|mail|邮件|邮箱|subscribe|订阅" +
-	"|etherpad|meetingrecord" +
-	"|cla|CLA|signagreement|协议|签署" +
+	"|etherpad|meetingrecord|会议记录" +
+	"|cla|CLA|signagreement|签署贡献者协议" +
 	"|guarding|jenkins|staticcheck|test|compile|robot|测试|编译|检查" +
 	"|website|blog|mirror|下载|官网|博客|镜像" +
 	"|meeting|会议|例会" +
-	"|sensitive|敏感" +
+	"|sensitivewords|敏感词" +
 	"|log|日志" +
-	"|label|标签" +
+	"|docs|documents|文档" +
+	"|labelsetting|标签设置" +
 	"|access|permission|权限" +
 	"|requirement|featurerequest|需求" +
 	"|translation|翻译" +
-	"|bug|cve|CVE|security" +
+	"|bug|BUG|cve|CVE" +
 	"|gitee|Gitee|Git|git" +
-	"|sig|Sig|SIG" +
 	"|scheduling|调度" +
-	"|OBS|PRM|ISO" +
-	"|src-openeuler|openeuler|openEuler)"
+	"|obs|OBS|rpm|PRM|iso|ISO" +
+	"|src-openeuler|src-openEuler|openeuler|openEuler)" +
+	"|开源实习"
 var (
 	labelRegex = regexp.MustCompile(`(?m)//(mailing|etherpad|CLA|guarding|website|meeting|kind|bug|CVE|security|activity|gitee|git|sig|release|build|repo|)(\S*)`)
 	// labelRegexTitle = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
@@ -46,9 +47,9 @@ var (
 )
 
 type Mentor struct {
-	Dir   string `json:"directory"`
-	Label string `json:"label"`
-	Name  string `json:"name"`
+	Words []string `json:"words"`
+	Label string   `json:"label"`
+	Name  string   `json:"name"`
 }
 
 func getToken() []byte {
@@ -95,7 +96,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	assignee := ""
 	strLabels := ""
-	orgOrigin := "all_for_test"
+	orgOrigin := "openEuler"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
@@ -142,29 +143,26 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		// }
 
 		switch issueType {
-		case "Bug-Report":
-			labelsToAdd = append(labelsToAdd, "kind/bug")
-			break
-		case "RFC":
-			labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+		case "Bug":
+			labelsToAdd = append(labelsToAdd, "bug/unconfirmed")
 			break
 		case "Requirement":
-			labelsToAdd = append(labelsToAdd, "kind/feature", "stat/wait-response")
+			labelsToAdd = append(labelsToAdd, "kind/feature_request")
 			break
-		case "Empty-Template":
-			labelsToAdd = append(labelsToAdd, "stat/wait-response")
+		case "CVE和安全问题":
+			labelsToAdd = append(labelsToAdd, "cve/pending")
+			break
+		case "翻译":
+			labelsToAdd = append(labelsToAdd, "kind/translation")
+			break
+		case "开源实习":
+			labelsToAdd = append(labelsToAdd, "activity/开源实习")
 			break
 		case "Task":
 			labelsToAdd = append(labelsToAdd, "kind/task")
 			break
-		case "Task-Tracking":
-			labelsToAdd = append(labelsToAdd, "kind/task")
-			break
-		case "任务":
-			labelsToAdd = append(labelsToAdd, "kind/task")
-			break
 		default:
-			labelsToAdd = append(labelsToAdd, "kind/bug", "stat/help-wanted")
+			labelsToAdd = append(labelsToAdd, "kind/task")
 			break
 		}
 
@@ -178,6 +176,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		assigneeStr = " @" + assignee + " "
 
 		labelsToAdd_str = strings.Join(labelsToAdd, ",")
+		fmt.Printf("debug message 0:label: %s assignee: %s \n", labelsToAdd_str, assigneeStr)
 		rese := c.AssignGiteeIssue(org, repo, labelsToAdd_str, issueNum, assignee)
 		if rese != nil {
 			fmt.Println(rese.Error())
@@ -191,11 +190,6 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		labelBoMatches := labelRegexWords.FindAllStringSubmatch(issueBody, -1)
 
 		if len(labelBoMatches) != 0 {
-			for _, tt := range labelBoMatches {
-				for _, t := range tt {
-					fmt.Printf("labelMatches from noteBody:\n%s \n", t)
-				}
-			}
 			nameFind = getLabelsFromBodyMatches(labelBoMatches)
 		}
 
@@ -209,6 +203,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		labelFind = getLabel(JsonByte, nameFind)
 
 		if len(labelFind) != 0 {
+
 			for _, strLabel := range labelFind {
 				strLabels = strLabels + "**//" + strLabel + "**" + "\n"
 			}
@@ -425,7 +420,16 @@ func getLabelsFromBodyMatches(matches [][]string) []string {
 	var labels []string
 	for _, match := range matches {
 		label := strings.ToLower(strings.TrimSpace(match[0]))
-		labels = append(labels, label)
+		isRepeat := false
+		for _, labelTemp := range labels {
+			if labelTemp == label {
+				isRepeat = true
+				break
+			}
+		}
+		if !isRepeat {
+			labels = append(labels, label)
+		}
 	}
 	return labels
 }
@@ -436,9 +440,9 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 		fmt.Println(err)
 		return ""
 	}
-	for i := range mentors {
-		for j := range labels {
-			if mentors[i].Label == labels[j] {
+	for i := range labels {
+		for j := range mentors {
+			if mentors[j].Label == strings.Split(labels[i], ",")[0] {
 				return mentors[i].Name
 			}
 		}
@@ -446,17 +450,34 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 	return ""
 }
 
-func getLabel(mentorsJson []byte, dirs []string) []string {
+func getLabel(mentorsJson []byte, words []string) []string {
 	var mentors []Mentor
 	var labels []string
 	if err := json.Unmarshal(mentorsJson, &mentors); err != nil {
 		fmt.Println(err)
 		return labels
 	}
-	for i := range mentors {
-		for j := range dirs {
-			if mentors[i].Dir == dirs[j] {
-				labels = append(labels, mentors[i].Label)
+	for i := range words {
+		isBreak := false
+		for j := range mentors {
+			if isBreak {
+				break
+			}
+			wordsTemp := mentors[j].Words
+			for k := range wordsTemp {
+				if wordsTemp[k] == words[i] {
+					isRepeat := false
+					for _, labelTemp := range labels {
+						if labelTemp == mentors[j].Label {
+							isRepeat = true
+						}
+					}
+					if !isRepeat {
+						labels = append(labels, mentors[j].Label)
+					}
+					isBreak = true
+					break
+				}
 			}
 		}
 	}
