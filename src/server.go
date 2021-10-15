@@ -186,6 +186,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		issueBody = strings.Replace(issueBody, " ", "", -1)
 		issueBody = strings.Replace(issueBody, "\n", "", -1)
 		var labelFind []string
+		var labelFindTemp []string
 		var nameFind []string
 		labelBoMatches := labelRegexWords.FindAllStringSubmatch(issueBody, -1)
 
@@ -200,7 +201,18 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			}
 		}
 
-		labelFind = getLabel(JsonByte, nameFind)
+		labelFindTemp = getLabel(JsonByte, nameFind)
+
+		labelAddRecord := make(map[string]bool)
+		for _, labelAdd := range labelsToAdd {
+			labelAddRecord[labelAdd] = true
+		}
+		for _, labelFindT := range labelFindTemp {
+			_, isAdded := labelAddRecord[labelFindT]
+			if !isAdded {
+				labelFind = append(labelFind, labelFindT)
+			}
+		}
 
 		if len(labelFind) != 0 {
 
@@ -211,7 +223,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 			helloWord := ""
 			helloWord = strings.Replace(partiTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
 
-			if assignee != "" {
+			if assignee != "" && assignee != issueMaker {
 				helloWord = strings.Replace(helloWord, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
 			} else {
 				helloWord = strings.Replace(helloWord, "@"+"{"+"assignee"+"}", fmt.Sprintf("%v", ""), -1)
@@ -409,9 +421,13 @@ func checkRepository(payload []byte, rep *gitee.ProjectHook) error {
 
 func getLabelsFromREMatches(matches [][]string) []string {
 	var labels []string
+	var words []string
 	for _, match := range matches {
 		label := strings.TrimSpace(strings.TrimLeft(match[0], "//"))
-		labels = append(labels, label)
+		words = strings.Split(label, ",")
+		for _, word := range words {
+			labels = append(labels, word)
+		}
 	}
 	return labels
 }
@@ -442,8 +458,8 @@ func getLabelAssignee(mentorsJson []byte, labels []string) string {
 	}
 	for i := range labels {
 		for j := range mentors {
-			if mentors[j].Label == strings.Split(labels[i], ",")[0] {
-				return mentors[i].Name
+			if mentors[j].Label == labels[i] {
+				return mentors[j].Name
 			}
 		}
 	}
