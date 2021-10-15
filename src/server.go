@@ -96,7 +96,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 	}
 	assignee := ""
 	strLabels := ""
-	orgOrigin := "openEuler"
+	orgOrigin := "open_euler"
 	labelsToAdd_str := ""
 	issueNum := i.Issue.Number
 	org := i.Repository.Namespace
