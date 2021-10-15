@@ -253,14 +253,7 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 
 		var labelFindTemp []string
 		for _, label := range issueInit {
-			// if strings.Contains(label.Name, "comp/") ||
-			// 	strings.Contains(label.Name, "sig/") ||
-			// 	strings.Contains(label.Name, "wg/") {
-			// 	ignore = false
-			// 	break
-			// }
-
-			strings.Join(labelFindTemp, label.Name)
+			labelFindTemp = append(labelFindTemp, label.Name)
 			if label.Name == "kind/decision" {
 				decision = true
 			}
@@ -277,16 +270,27 @@ func handleIssueEvent(i *gitee.IssueEvent) {
 		} else {
 			assignTemp := string(assignComment[:])
 			assignee = getLabelAssignee(JsonByte, labelFindTemp)
-			assignTemp = strings.Replace(assignTemp, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
-			rs := c.CreateGiteeIssueComment(org, repo, issueNum, assignTemp)
-			if rs != nil {
-				fmt.Println(res.Error())
-				return
+			assignTemp = strings.Replace(assignTemp, "{"+"issueMaker"+"}", fmt.Sprintf("%v", issueMaker), -1)
+			if assignee != "" {
+				if assignee != issueMaker {
+					assignTemp = strings.Replace(assignTemp, "{"+"assignee"+"}", fmt.Sprintf("%v", assignee), -1)
+				} else {
+					assignTemp = strings.Replace(assignTemp, "@{"+"assignee"+"}", fmt.Sprintf("%v", "自己"), -1)
+				}
+				rs := c.CreateGiteeIssueComment(org, repo, issueNum, assignTemp)
+				if rs != nil {
+					fmt.Println(res.Error())
+					return
+				}
 			}
 		}
 
 		if decision == true {
-			assigneeStr = " @" + assignee + " "
+			if assignee != "" && assignee != issueMaker {
+				assigneeStr = " @" + assignee + " "
+			} else {
+				assigneeStr = ""
+			}
 			Temp := "hello, @" + issueMaker + assigneeStr + " " + decisionTemp + "\n"
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, Temp)
 			if res != nil {
