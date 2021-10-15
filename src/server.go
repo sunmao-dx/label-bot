@@ -361,7 +361,13 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 
 		if assignee == "" {
 			assignee = getLabelAssignee(JsonByte, labelsToAdd)
-			assigneeStr = " @" + assignee + " "
+		}
+		if assignee != "" {
+			if assignee != issueMaker {
+				assigneeStr = " @" + assignee + " "
+			} else {
+				assigneeStr = ""
+			}
 		}
 		rese := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 		if rese != nil {
