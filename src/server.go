@@ -331,7 +331,6 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	if i.Issue.Assignee != nil {
 		assignee = i.Issue.Assignee.Login
 		assigneeStr = " @" + assignee + " "
-		fmt.Printf("CODE0:Issue %s was assigned to %s \n", issueNum, assignee)
 	}
 	labelStrs := make([]string, 0)
 	for _, o := range labels {
@@ -343,16 +342,8 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		if len(labelMatches) == 0 {
 			return
 		}
-		for _, tt := range labelMatches {
-			for _, t := range tt {
-				fmt.Printf("labelMatches from noteBody:\n%s \n", t)
-			}
-		}
 		var labelsToAdd []string
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
-		for _, labelTemp := range labelsToAdd {
-			fmt.Printf("labelGet from matches: \n%s \n", labelTemp)
-		}
 
 		if strings.Contains(noteBody, "good-first-issue") {
 			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/openeuler/blob/master/CONTRIBUTING.md"
@@ -371,7 +362,6 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		if assignee == "" {
 			assignee = getLabelAssignee(JsonByte, labelsToAdd)
 			assigneeStr = " @" + assignee + " "
-			fmt.Printf("CODE1:Issue %s was assigned to %s \n", issueNum, assignee)
 		}
 		rese := c.AssignGiteeIssue(org, repo, labelsToAddStr, issueNum, assignee)
 		if rese != nil {
