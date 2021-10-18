@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: back
-          image: guoqiangqi/test-bot:0.49
+          image: guoqiangqi/test-bot:0.50
           ports:
             - containerPort: 8008
