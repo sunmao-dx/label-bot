@@ -41,7 +41,7 @@ var regexpWords = "(mailinglist|maillist|mail|邮件|邮箱|subscribe|订阅" +
 	"|src-openeuler|src-openEuler|openeuler|openEuler)" +
 	"|开源实习"
 var (
-	labelRegex = regexp.MustCompile(`(?m)//(mailing|etherpad|CLA|guarding|website|meeting|kind|bug|CVE|security|activity|gitee|git|sig|release|build|repo|)(\S*)`)
+	labelRegex = regexp.MustCompile(`(?m)//(mailing|etherpad|CLA|guarding|website|meeting|kind|bug|CVE|security|activity|gitee|git|sig|release|build|repo)(\S*)`)
 	// labelRegexTitle = regexp.MustCompile(`^(.*)(Lite|LITE)\s*(.*?)\s*$`)
 	labelRegexWords = regexp.MustCompile(regexpWords)
 )
@@ -57,7 +57,7 @@ func getToken() []byte {
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Version: 0.51 \n")
+	fmt.Fprint(w, "Version: 0.52 \n")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
 	if !ok {
 		return
