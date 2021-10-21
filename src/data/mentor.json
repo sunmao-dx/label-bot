@@ -56,7 +56,7 @@
   },
   {
     "words": ["requirement", "featurerequest", "需求"],
-    "label": "king/feature_request",
+    "label": "kind/feature_request",
     "name": "zhengzhenyu"
   },
   {
@@ -86,7 +86,7 @@
   },
   {
     "words": ["scheduling", "调度"],
-    "label": "king/schduling",
+    "label": "kind/schduling",
     "name": "georgecao"
   },
   {

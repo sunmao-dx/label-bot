@@ -57,7 +57,7 @@ func getToken() []byte {
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Version: 0.50 \n")
+	fmt.Fprint(w, "Version: 0.51 \n")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
 	if !ok {
 		return
@@ -336,7 +336,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 	for _, o := range labels {
 		labelStrs = append(labelStrs, o.Name)
 	}
-	if name != "test-bot" {
+	if name != "dx-bot" && name != "openeuler-ci-bot" {
 		c := gitee_utils.NewClient(getToken)
 		labelMatches := labelRegex.FindAllStringSubmatch(noteBody, -1)
 		if len(labelMatches) == 0 {
@@ -346,7 +346,7 @@ func handleIssueCommentEvent(i *gitee.NoteEvent) {
 		labelsToAdd = getLabelsFromREMatches(labelMatches)
 
 		if strings.Contains(noteBody, "good-first-issue") {
-			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://gitee.com/openeuler/blob/master/CONTRIBUTING.md"
+			astr := "如果您是第一次贡献社区，可以参考我们的贡献指南：https://www.openeuler.org/zh/community/contribution/"
 			res := c.CreateGiteeIssueComment(org, repo, issueNum, astr)
 			if res != nil {
 				fmt.Println(res.Error())
