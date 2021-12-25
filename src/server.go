@@ -57,7 +57,7 @@ func getToken() []byte {
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Version: 0.55 \n")
+	fmt.Fprint(w, "Version: 1.0 \n")
 	eventType, _, payload, ok, _ := gitee_utils.ValidateWebhook(w, r)
 	if !ok {
 		return
